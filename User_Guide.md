@@ -59,33 +59,134 @@ npx migrate-mongo init
 
 ## 3. First Test (Migration & Rollback)
 
-This test verifies the system's ability to upgrade the database schema and safely revert it without data loss.
+This test verifies the system's ability to upgrade the database schema and safely revert it without data loss. All commands are executed directly from the project root directory.
 
-_Scenario: Renaming the `name` field to `fullName` in the `users` collection._
+**Step 1 : Create a Test Migration File**
+Generate a new migration script by running the following command in the root directory:
 
-**Step 1: Verify current status**
-
-```bash
-npx migrate-mongo status
 ```
+npx migrate-mongo create initial_test_migration
+```
+* Expected Output: A new file is created inside the migrations/ directory at the root with a timestamp prefix (e.g., 20260621075815-initial_test_migration.js).
 
-_Expected: The target migration file shows `PENDING`._
+**Step 2: Implement the Migration Logic**
+```
+export const up = async (db, client) => {
+    // Test: Add a temporary test field to all products
+    await db.collection('products').updateMany(
+        {},
+        { $set: { testField: "Migration is working!" } }
+    );
+};
 
-**Step 2: Execute Migration (Up)**
+export const down = async (db, client) => {
+    // Revert: Completely remove the temporary test field from all products
+    await db.collection('products').updateMany(
+        {},
+        { $unset: { testField: "" } }
+    );
+};
+```
+**Step 3: Execute Migration (Up)**
 
 ```bash
 npx migrate-mongo up
 ```
 
-_Expected: Database schema is updated. The `name` field becomes `fullName`. Status changes to `APPLIED`._
 
-**Step 3: Execute Rollback (Down)**
+**Step 3: Check Initial Migration Status**
 
 ```bash
-npx migrate-mongo down
+npx migrate-mongo status
 ```
 
-_Expected: Schema reverts to the original state safely. The `fullName` field reverts to `name`. Status changes to `PENDING`._
+_Expected:_
+```
+┌──────────────────────────────────────────┬────────────┬─────────────────┐
+│ Filename                                 │ Applied At │ Migration block │
+├──────────────────────────────────────────┼────────────┼─────────────────┤
+│20260621075815initial_test_migration.js   │  PENDING   │                 │
+└──────────────────────────────────────────┴────────────┴─────────────────┘
+```
+**Step 4: Execute Migration (Up)**
+Apply the schema changes directly to your MongoDB database instance:
+```
+npx migrate-mongo up
+```
+_Expected:_
+* Terminal log : MIGRATED UP: ...-initial_test_migration.js
+* Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
+Example : 
+```
+┌──────────────────────────────────────────┬──────────────────────────┬─────────────────┐
+│ Filename                                 │ Applied At               │ Migration block │
+├──────────────────────────────────────────┼──────────────────────────┼─────────────────┤
+│ 20260621075815-initial_test_migration.js │ 2026-06-21 15:12:34 UTC  │ 178202896604    │
+└──────────────────────────────────────────┴──────────────────────────┴─────────────────┘
+```
+* Database Verification: Check your products collection via MongoDB Compass or Atlas. Every product document will now dynamically contain "testField": "Migration is working!"
+
+Example : 
+```
+{
+  "_id": {
+    "$oid": "6a2e480a2bec7b74c9e9789e"
+  },
+  "user": {
+    "$oid": "6a2e480a2bec7b74c9e9789c"
+  },
+  "name": "iPhone 15 Pro Max",
+  "image": "/images/phone.jpg",
+  "brand": "Apple",
+  "category": "Electronics",
+  "description": "Chính hãng VN/A với dung lượng 256GB",
+  "reviews": [
+    {
+      "name": "John Doe",
+      "rating": 5,
+      "comment": "Sản phẩm tuyệt vời!",
+      "user": {
+        "$oid": "6a2e480a2bec7b74c9e9789d"
+      },
+      "createdAt": {
+        "$date": "2026-06-14T06:19:54.863Z"
+      },
+      "updatedAt": {
+        "$date": "2026-06-14T06:19:54.863Z"
+      }
+    }
+  ],
+  "rating": 5,
+  "numReviews": 1,
+  "price": 1200,
+  "countInStock": 10,
+  "createdAt": {
+    "$date": "2026-06-14T06:19:54.863Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-14T06:19:54.863Z"
+  },
+  "testField": "Migration is working!"
+}
+```
+**Step 5: Execute Rollback (Down)**
+Revert the database schema to its original state to ensure that your rollback logic can clean up successfully:
+```
+npx migrate-mongo down
+```
+_Expected:_
+* Terminal log : MIGRATED DOWN: ...-initial_test_migration.js
+* Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
+Example : 
+```
+┌──────────────────────────────────────────┬────────────┬─────────────────┐
+│ Filename                                 │ Applied At │ Migration block │
+├──────────────────────────────────────────┼────────────┼─────────────────┤
+│20260621075815-initial_test_migration.js  │  PENDING   │                 │
+└──────────────────────────────────────────┴────────────┴─────────────────┘
+```
+* Database Cleanup: In your MongoDB instance, the testField will be fully purged ($unset), restoring your product documents exactly back to their original Mongoose schema structure.
+  
 
 ## 4. Advanced Usage
 
