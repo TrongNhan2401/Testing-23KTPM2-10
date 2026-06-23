@@ -67,9 +67,11 @@ Generate a new migration script by running the following command in the root dir
 ```
 npx migrate-mongo create initial_test_migration
 ```
-* Expected Output: A new file is created inside the migrations/ directory at the root with a timestamp prefix (e.g., 20260621075815-initial_test_migration.js).
+
+- Expected Output: A new file is created inside the migrations/ directory at the root with a timestamp prefix (e.g., 20260621075815-initial_test_migration.js).
 
 **Step 2: Implement the Migration Logic**
+
 ```
 export const up = async (db, client) => {
     // Test: Add a temporary test field to all products
@@ -87,12 +89,12 @@ export const down = async (db, client) => {
     );
 };
 ```
+
 **Step 3: Execute Migration (Up)**
 
 ```bash
 npx migrate-mongo up
 ```
-
 
 **Step 3: Check Initial Migration Status**
 
@@ -101,6 +103,7 @@ npx migrate-mongo status
 ```
 
 _Expected:_
+
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
 │ Filename                                 │ Applied At │ Migration block │
@@ -108,15 +111,20 @@ _Expected:_
 │20260621075815initial_test_migration.js   │  PENDING   │                 │
 └──────────────────────────────────────────┴────────────┴─────────────────┘
 ```
+
 **Step 4: Execute Migration (Up)**
 Apply the schema changes directly to your MongoDB database instance:
+
 ```
 npx migrate-mongo up
 ```
+
 _Expected:_
-* Terminal log : MIGRATED UP: ...-initial_test_migration.js
-* Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-Example : 
+
+- Terminal log : MIGRATED UP: ...-initial_test_migration.js
+- Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
+  Example :
+
 ```
 ┌──────────────────────────────────────────┬──────────────────────────┬─────────────────┐
 │ Filename                                 │ Applied At               │ Migration block │
@@ -124,9 +132,11 @@ Example :
 │ 20260621075815-initial_test_migration.js │ 2026-06-21 15:12:34 UTC  │ 178202896604    │
 └──────────────────────────────────────────┴──────────────────────────┴─────────────────┘
 ```
-* Database Verification: Check your products collection via MongoDB Compass or Atlas. Every product document will now dynamically contain "testField": "Migration is working!"
 
-Example : 
+- Database Verification: Check your products collection via MongoDB Compass or Atlas. Every product document will now dynamically contain "testField": "Migration is working!"
+
+Example :
+
 ```
 {
   "_id": {
@@ -169,15 +179,20 @@ Example :
   "testField": "Migration is working!"
 }
 ```
+
 **Step 5: Execute Rollback (Down)**
 Revert the database schema to its original state to ensure that your rollback logic can clean up successfully:
+
 ```
 npx migrate-mongo down
 ```
+
 _Expected:_
-* Terminal log : MIGRATED DOWN: ...-initial_test_migration.js
-* Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-Example : 
+
+- Terminal log : MIGRATED DOWN: ...-initial_test_migration.js
+- Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
+  Example :
+
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
 │ Filename                                 │ Applied At │ Migration block │
@@ -185,31 +200,96 @@ Example :
 │20260621075815-initial_test_migration.js  │  PENDING   │                 │
 └──────────────────────────────────────────┴────────────┴─────────────────┘
 ```
-* Database Cleanup: In your MongoDB instance, the testField will be fully purged ($unset), restoring your product documents exactly back to their original Mongoose schema structure.
-  
+
+- Database Cleanup: In your MongoDB instance, the testField will be fully purged ($unset), restoring your product documents exactly back to their original Mongoose schema structure.
 
 ## 4. Advanced Usage
 
-Beyond structural changes, we implemented automated data testing scripts located in the `backend/` directory.
+Beyond structural changes, traditional QA processes struggle with generating valid test data and protecting real user data during NoSQL integration testing. We implemented an automated AI and Node.js-driven testing suite in the `backend/` directory to solve this.
 
-### 4.1. AI-Assisted Test Data Generation & Masking
+### 4.1. AI-Assisted Synthetic Data Generation
 
-- **Generate Synthetic Data:** Run `node backend/generate_test_data.js` to prompt Gemini AI to generate boundary test cases (e.g., negative prices, missing addresses) based on our Mongoose schema.
-- **Data Masking:** Run `node backend/demo_masking.js` to mask real user data. It uses Faker for standard PII (Names, Emails) and Gemini AI to contextually rewrite unstructured nested JSON like `shippingAddress` while maintaining geographical logic.
+Creating edge-case data manually is time-consuming. We utilize Google Gemini AI as an automated QA engineer to read the Mongoose Schema and purposefully inject "poisoned" test cases into the database.
 
-### 4.2. Invariants Testing (Orphaned Data Detection)
+**Step 1: Run the Generator Script**
+Execute the following command from the root directory:
 
-Run the core testing suite to scan the entire MongoDB instance for business logic violations:
+```bash
+node backend/generate_test_data.js
+```
+
+**Expected Result:**
+The script successfully prompts Gemini to generate and insert exactly 3 targeted document scenarios into the `orders` collection:
+
+1. A valid "Happy Path" order.
+2. A logic error order (e.g., negative `taxPrice` or incorrect total sum).
+3. A missing boundary data order (e.g., completely missing the `shippingAddress` object).
+
+### 4.2. Intelligent Data Masking (PII Protection)
+
+When pulling production data to a testing environment, Personally Identifiable Information (PII) must be obscured without breaking the system's JSON tree structure.
+
+**Step 1: Run the Masking Script**
+
+```bash
+node backend/data_masking.js
+```
+
+**Expected Result:**
+The script applies a hybrid role-based masking strategy:
+
+- **Faker.js** processes flat fields instantly, replacing real `name` and `email` with mock data.
+- **Gemini AI** intercepts the complex, unstructured `shippingAddress` object. It interprets the geographical context (e.g., "Vietnam") and generates a highly realistic, localized fake address while strictly adhering to the JSON schema to prevent application crashes.
+
+### 4.3. Business Invariants Testing
+
+Because NoSQL databases (like MongoDB) do not natively enforce constraints, schemas, or referential integrity (Foreign Keys), invalid data can easily crash the frontend application.
+
+To mitigate this, we built a comprehensive validation scanner using Node.js and MongoDB Aggregation Pipelines.
+
+**Step 1: Execute the Invariants Scanner**
 
 ```bash
 node backend/test_invariants.js
 ```
 
-This script executes 6 structural tests, highlighting:
+**Expected Result:**
+The script scans the entire MongoDB instance across 10 critical business rules. It serves as an automated security net that catches the "poisoned" data generated in Step 4.1.
 
-- Missing mandatory fields (Email, Shipping Address).
-- Financial calculation mismatches (`totalPrice` vs `itemsPrice + taxPrice`).
-- **Orphaned Documents (Missing Foreign Keys):** Uses MongoDB Aggregation (`$lookup`) to identify `orderItems` referencing a `product` that has been deleted, preventing Frontend UI crashes.
+_Terminal Output Example:_
+
+```text
+==================================================
+📊 KẾT QUẢ QUÉT DATABASE (INVARIANTS REPORT)
+==================================================
+
+✅ [TEST 1 PASSED]: 100% User có Email hợp lệ.
+✅ [TEST 2 PASSED]: 100% Sản phẩm có giá niêm yết hợp lệ.
+❌ [TEST 3 FAILED]: Phát hiện 1 đơn hàng bị mất địa chỉ giao hàng!
+   👉 ID vi phạm: [6a3a5e8dc4810551abd67208]
+❌ [TEST 4 FAILED]: Phát hiện 1 đơn hàng sai logic tài chính (VD: Thuế âm, Tổng tiền KHÔNG BẰNG Items + Tax + Shipping)!
+   👉 ID vi phạm: [6a3a5e8dc4810551abd67207]
+✅ [TEST 5 PASSED]: 100% Phương thức thanh toán chuẩn hóa.
+❌ [TEST 6 FAILED]: Phát hiện 1 order item(s) mồ côi (tham chiếu đến Sản phẩm không tồn tại trong kho)!
+   👉 ID vi phạm (Đơn hàng): [6a3a5e8dc4810551abd67206]
+✅ [TEST 7 PASSED]: 100% Email trong hệ thống là duy nhất (Unique Index Guarantee).
+❌ [TEST 8 FAILED]: Phát hiện 1 đơn hàng có trạng thái 'Đã thanh toán' (hoặc 'Đã giao') nhưng thiếu ngày giao (hoặc ngày thanh toán)!
+   👉 ID vi phạm: [6a3a5e8dc4810551abd67209]
+✅ [TEST 9 PASSED]: 100% Sản phẩm có số lượng Tồn kho và Điểm đánh giá (Rating) hợp lệ.
+✅ [TEST 10 PASSED]: 100% Đơn hàng có liên kết với User hợp lệ.
+
+==================================================
+🚨 CẢNH BÁO: HỆ THỐNG ĐANG TỒN TẠI 4 LỖI DỮ LIỆU CẦN XỬ LÝ GẤP!
+==================================================
+```
+
+**Key Concepts Tested:**
+
+- **Null/Boundary Constraints (Tests 1, 3):** Identifies missing mandatory fields (e.g., Email, Shipping Address).
+- **Mathematical & Value Constraints (Tests 2, 4, 5, 9):** Validates Enum properties, positive integers, bounds (Rating $\le$ 5), and financial logic ($TotalPrice = Items + Tax + Shipping$).
+- **State Synchronization (Test 8):** Ensures logical parity between boolean states and timestamps (e.g., `isPaid` must have a corresponding `paidAt` date).
+- **Referential Integrity / Virtual Foreign Keys (Tests 6, 10):** Uses the `$lookup` pipeline to flag **Orphaned Documents**—such as an order referencing a deleted product or a deleted user account.
+- **Unique Indexing (Test 7):** Scans for duplicated emails across multiple users to prevent authentication conflicts.
 
 ## 5. Troubleshooting
 
