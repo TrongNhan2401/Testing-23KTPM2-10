@@ -20,42 +20,86 @@ This guide demonstrates a robust testing architecture that addresses these NoSQL
 
 ### Setup Instructions
 
-1. Navigate to the backend directory and install the required testing dependencies:
-   ```bash
-   cd backend
-   npm install migrate-mongo @faker-js/faker @google/generative-ai dotenv mongodb
-   ```
+#### Step 1 — Clone the repository
 
-````
-2. Initialize the migration tool:
-   ```bash
+```bash
+git clone https://github.com/bradtraversy/proshop-v2.git
+cd proshop-v2
+```
+
+#### Step 2 — Set up MongoDB Atlas
+
+- Go to [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas) and sign up / log in
+- Create a **Free Cluster** (M0 Sandbox), choose the region closest to you (e.g. Singapore)
+- Go to **Security → Network Access** → **Add IP Address** → choose **Allow Access from Anywhere** (0.0.0.0/0) for development
+- Go to **Security → Database Access** → **Add New Database User**, set a username and password, grant **Read and write to any database**, and save the password
+- Go to **Database** → click **Connect** on your cluster → **Connect your application** → copy the connection string:
+
+```bash
+  mongodb+srv://<username>:<password>@cluster0.xxxxxx.mongodb.net/?retryWrites=true&w=majority
+```
+
+#### Step 3 — Install project dependencies
+
+```bash
+npm install
+```
+
+> Installs all base dependencies already listed in `package.json` (including `dotenv` and `mongoose`). Deprecation warnings and audit vulnerability notices may appear — these come from third-party sub-dependencies and do not block setup; no action is required.
+
+#### Step 4 — Install data masking & migration dependencies
+
+```bash
+npm install migrate-mongo @faker-js/faker @google/generative-ai mongodb
+```
+
+
+| Package                 | Purpose                                                                                              | Already in package.json?          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `migrate-mongo`         | Database migration tool (CLI included)                                                               | No                                |
+| `@faker-js/faker`       | Generates fake data for masking                                                                      | No                                |
+| `@google/generative-ai` | Gemini AI SDK for AI-powered masking                                                                 | No                                |
+| `mongodb`               | MongoDB driver — required directly by `migrate-mongo` (separate from `mongoose`, which the app uses) | No                                |
+| ~~`dotenv`~~            | Loads `.env` variables                                                                               | **Yes — already installed, skip** |
+
+
+#### Step 5 — Initialize the migration tool
+
+```bash
 npx migrate-mongo init
-````
+```
 
-3. Configure Environment Variables: Create or update your `.env` file in the root directory.
-   ```env
-   MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxx.mongodb.net/proshop?retryWrites=true&w=majority
-   GEMINI_API_KEY=your_google_gemini_api_key
-   ```
+This generates `migrate-mongo-config.js` and a `migrations/` folder in the project root. The package is considered installed once this command completes without error.
 
-````
-4. **ESM Configuration (Critical):** Since ProShop uses ES Modules, overwrite the generated `migrate-mongo-config.js` with the following:
-   ```javascript
-   import dotenv from 'dotenv';
-   dotenv.config();
+#### Step 6 — Configure `.env`
 
-   export default {
-     mongodb: {
-       url: process.env.MONGO_URI,
-       databaseName: "proshop",
-       options: {} // Keep empty for MongoDB Driver v4.0+
-     },
-     migrationsDir: "migrations",
-     changelogCollectionName: "changelog",
-     migrationFileExtension: ".js",
-     moduleSystem: 'esm', // Forces ES Module execution
-   };
-````
+Create or update `.env` in the root directory:
+
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxx.mongodb.net/proshop?retryWrites=true&w=majority
+GEMINI_API_KEY=your_google_gemini_api_key
+```
+
+#### Step 7 — Configure `migrate-mongo-config.js` (ESM)
+
+Since ProShop uses ES Modules (`"type": "module"` in `package.json`), overwrite the generated `migrate-mongo-config.js` with:
+
+```javascript
+import dotenv from "dotenv";
+dotenv.config();
+
+export default {
+  mongodb: {
+    url: process.env.MONGO_URI,
+    databaseName: "proshop",
+    options: {}, // Keep empty for MongoDB Driver v4.0+
+  },
+  migrationsDir: "migrations",
+  changelogCollectionName: "changelog",
+  migrationFileExtension: ".js",
+  moduleSystem: "esm", // Forces ES Module execution
+};
+```
 
 ## 3. First Test (Migration & Rollback)
 
@@ -102,7 +146,7 @@ npx migrate-mongo up
 npx migrate-mongo status
 ```
 
-_Expected:_
+*Expected:*
 
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
@@ -119,11 +163,11 @@ Apply the schema changes directly to your MongoDB database instance:
 npx migrate-mongo up
 ```
 
-_Expected:_
+*Expected:*
 
 - Terminal log : MIGRATED UP: ...-initial_test_migration.js
 - Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-  Example :
+Example :
 
 ```
 ┌──────────────────────────────────────────┬──────────────────────────┬─────────────────┐
@@ -187,11 +231,11 @@ Revert the database schema to its original state to ensure that your rollback lo
 npx migrate-mongo down
 ```
 
-_Expected:_
+*Expected:*
 
 - Terminal log : MIGRATED DOWN: ...-initial_test_migration.js
 - Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-  Example :
+Example :
 
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
@@ -256,7 +300,7 @@ node backend/test_invariants.js
 **Expected Result:**
 The script scans the entire MongoDB instance across 10 critical business rules. It serves as an automated security net that catches the "poisoned" data generated in Step 4.1.
 
-_Terminal Output Example:_
+*Terminal Output Example:*
 
 ```text
 ==================================================
@@ -308,3 +352,4 @@ _Terminal Output Example:_
 - [MongoDB Aggregation Pipeline (`$lookup`)](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/)
 - [Google Gemini API Node.js SDK](https://ai.google.dev/docs)
 - [Faker.js Documentation](https://fakerjs.dev/)
+
