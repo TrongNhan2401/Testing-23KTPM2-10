@@ -134,12 +134,6 @@ export const down = async (db, client) => {
 };
 ```
 
-**Step 3: Execute Migration (Up)**
-
-```bash
-npx migrate-mongo up
-```
-
 **Step 3: Check Initial Migration Status**
 
 ```bash
