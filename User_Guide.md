@@ -330,15 +330,38 @@ The script scans the entire MongoDB instance across 10 critical business rules. 
 - **Unique Indexing (Test 7):** Scans for duplicated emails across multiple users to prevent authentication conflicts.
 
 ## 5. Troubleshooting
+Issue 1: Environment Variables Not Loaded
+  - Error: `Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
+  [0] [nodemon] app crashed - waiting for file changes before starting...` 
 
-- **Error:** `module is not defined in ES module scope`
-  - **Fix:** Ensure your `migrate-mongo-config.js` uses `export default` and `moduleSystem: 'esm'` instead of CommonJS `module.exports`.
-- **Error:** `No url defined in config file!` or `Cannot read properties of undefined (reading 'startsWith')`
-  - **Fix:** The `.env` file is not being loaded. Ensure you are running the commands from the correct root directory where the `.env` file is located, or provide the direct MongoDB URI string in the config file.
-- **Error:** `MongoServerSelectionError: connection timed out`
-  - **Fix:** MongoDB Atlas is blocking your connection. Go to the Atlas Dashboard -> Network Access -> Add IP Address -> Select "Allow Access From Anywhere" (`0.0.0.0/0`).
-- **Error:** `options usenewurlparser, useunifiedtopology are not supported`
-  - **Fix:** Remove these deprecated options from the `migrate-mongo-config.js` file (Supported MongoDB driver version > 4.0).
+  - When: running npm run dev
+  - Cause: The environment file is named .env.example instead of .env, so the application cannot load the environment variables.
+  - Fix: Rename the environment file from .env.example to .env.
+
+Issue 2: Mongodb Connection Failure
+- Error: `Error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/`
+- When: running npm run dev
+- Cause: Mongodb isn't configured with IP Address 0.0.0.0/0( means allow all).
+- Fix: MongoDB Atlas is blocking your connection. Go to the Atlas Dashboard -> Security -> Network Access -> IP ACCESS List -> Add IP Address -> Add `0.0.0.0/0`(Allow Access From Anywhere).
+
+Issue 3: ES Module and CommonJS Conflict
+- Error: `ERROR: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\Testing\Seminar\proshop-v2\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension. ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\Testing\Seminar\proshop-v2\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+        at file:///D:/Testing/Seminar/proshop-v2/backend/migrate-mongo-config.js:43:1
+        at ModuleJobSync.runSync (node:internal/modules/esm/module_job:458:37)
+        at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:435:47)
+        at loadESMFromCJS (node:internal/modules/cjs/loader:1537:24)
+        at Module._compile (node:internal/modules/cjs/loader:1688:5)
+        at Object..js (node:internal/modules/cjs/loader:1839:10)
+        at Module.load (node:internal/modules/cjs/loader:1441:32)
+        at Function._load (node:internal/modules/cjs/loader:1263:12)
+        at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+        at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)` 
+      
+  - When: running npx migrate-mongo create initial_test_migration 
+  - Cause: package.jon is defined with type as ESM but migrate-mongodb-config.js is defined as commonjs.
+  - Fix: Ensure your `migrate-mongo-config.js` uses `export default` and `moduleSystem: 'esm'` instead of CommonJS `module.exports`.
 
 ## 6. References
 
