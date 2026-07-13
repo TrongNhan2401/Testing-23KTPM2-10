@@ -10,6 +10,8 @@
 
 **Điểm số:** 1 loại duy nhất — Đúng: **+2** | Sai: **−1** | Bỏ sót: **0**.
 
+**Phản hồi điểm:** tức thời ngay khi click, không cần bước phân loại nhãn (xem mục 6).
+
 ---
 
 ## 2. Luồng màn hình (Flow)
@@ -18,10 +20,12 @@
 [1] Landing/Login screen
       → chọn nhóm từ danh sách → vào phòng của nhóm
 [2] Game screen (bảng orders.csv, đếm ngược 10:00)
-      → nhóm click chọn các ô nghi ngờ có lỗi
-      → nộp bài (submit) hoặc hết giờ tự nộp
-[3] Scoring screen (hiện điểm ngay sau submit hoặc khi giờ kết thúc toàn lớp)
-      → bảng xếp hạng các nhóm
+      → nhóm click vào ô nghi ngờ có lỗi
+      → click đúng: ô chuyển xanh, +2 điểm ngay lập tức
+      → click sai: ô chuyển đỏ, −1 điểm ngay lập tức
+      → nộp bài sớm (submit) hoặc hết giờ tự nộp
+[3] Scoring / Leaderboard screen (hiện điểm ngay sau submit)
+      → bảng xếp hạng các nhóm theo điểm và thời gian nộp
 [4] One-Minute Paper form
       → (a) one thing learned (text)
       → (b) one thing still unclear (text)
@@ -31,60 +35,67 @@
 
 ---
 
-## 3. Màn hình Admin (nhỏ)
+## 3. Trang điều phối (dành cho nhóm thuyết trình)
 
-Một trang riêng, đơn giản, chỉ phục vụ 2 việc: **bắt đầu trò chơi** và **quản lý khóa nhóm**. Không cần thiết kế cầu kỳ — 1 danh sách + vài nút bấm là đủ.
+Một trang riêng, đơn giản, do **nhóm thuyết trình** (nhóm đứng lớp seminar, không phải giảng viên hay ban tổ chức riêng) dùng để chủ động điều khiển trò chơi. Không cần thiết kế cầu kỳ — 1 danh sách + vài nút bấm là đủ.
 
 ### 3.1 Trạng thái trò chơi (Game State)
 
 - Toàn bộ game có 1 trạng thái chung: `not_started` (mặc định) / `running` / `ended`.
-- Ở trạng thái `not_started`: màn hình Login (mục 4) hiện thông báo "Trò chơi chưa bắt đầu, vui lòng chờ người điều khiển" — danh sách nhóm hiện nhưng **không bấm chọn được**.
-- Người điều khiển bấm nút **"Bắt đầu trò chơi"** trên trang admin → chuyển toàn bộ game sang `running`. Lúc này màn hình Login mới cho phép các nhóm bấm chọn tên để vào.
-- Đồng hồ đếm ngược 10 phút của từng nhóm chỉ bắt đầu chạy khi nhóm đó thực sự bấm vào (không phải khi người điều khiển bấm "Bắt đầu"), giữ đúng như mục 6.1 đã mô tả.
-- Người điều khiển có thể bấm **"Kết thúc giờ"** để chuyển sang `ended`: mọi nhóm chưa nộp bị tự động submit ngay, khóa toàn bộ bảng.
+- Ở trạng thái `not_started`: màn hình Login (mục 5) hiện thông báo "Trò chơi chưa bắt đầu, vui lòng chờ" — danh sách nhóm hiện nhưng **không bấm chọn được**.
+- Nhóm thuyết trình bấm nút **"Bắt đầu trò chơi"** trên trang điều phối → chuyển toàn bộ game sang `running`. Lúc này màn hình Login mới cho phép các nhóm bấm chọn tên để vào.
+- Đồng hồ đếm ngược 10 phút của từng nhóm chỉ bắt đầu chạy khi nhóm đó thực sự bấm vào (không phải khi trang điều phối bấm "Bắt đầu"), giữ đúng như mục 6.1 đã mô tả.
+- Nhóm thuyết trình có thể bấm **"Kết thúc giờ"** để chuyển sang `ended`: mọi nhóm chưa nộp bị tự động submit ngay, khóa toàn bộ bảng.
 
 ### 3.2 Danh sách nhóm & quản lý khóa
 
-- Bảng danh sách tất cả nhóm, mỗi dòng gồm: tên nhóm — trạng thái (`not_started` / `locked_in_progress` / `submitted`) — điểm (nếu đã có) — nút hành động.
+- Bảng danh sách tất cả nhóm, mỗi dòng gồm: tên nhóm — trạng thái (`not_started` / `locked_in_progress` / `submitted`) — điểm hiện tại (nếu đã có) — thời gian nộp (nếu đã nộp) — nút hành động.
 - Nút hành động theo trạng thái:
   - `locked_in_progress` → nút **"Mở khóa"** (dùng khi nhóm rớt mạng thật, cần vào lại từ thiết bị khác).
   - `not_started` → không có hành động gì thêm (đang chờ nhóm tự bấm vào).
   - `submitted` → không cần hành động (có thể xem lại điểm).
 - Danh sách này nên tự cập nhật real-time (poll định kỳ vài giây là đủ, không cần websocket phức tạp).
 
-### 3.3 Giữ quy mô nhỏ gọn
+### 3.3 Xem bảng xếp hạng
 
-Trang admin **không cần**: đăng nhập/mật khẩu riêng, phân quyền nhiều người điều khiển, lịch sử thao tác, hay chỉnh sửa đáp án qua giao diện. Đây chỉ là 1 bảng điều khiển đơn giản (route riêng, ví dụ `/admin`), đủ dùng cho 1 buổi seminar 10 phút. Answer Key vẫn cấu hình cứng trong code (mục 7), không cần UI để sửa.
+- Trang điều phối hiển thị luôn **bảng xếp hạng (leaderboard)** giống hệt những gì các nhóm thấy sau khi nộp bài (mục 9), cập nhật real-time — để nhóm thuyết trình có thể chiếu màn hình này lên cho cả lớp xem trực tiếp trong lúc chờ các nhóm còn lại nộp bài.
+
+### 3.4 Giữ quy mô nhỏ gọn
+
+Trang điều phối **không cần**: đăng nhập/mật khẩu riêng, phân quyền nhiều người, lịch sử thao tác, hay chỉnh sửa đáp án qua giao diện. Đây chỉ là 1 bảng điều khiển đơn giản (route riêng, ví dụ `/host`), đủ dùng cho 1 buổi seminar 10 phút. Answer Key vẫn cấu hình cứng trong code (mục 7), không cần UI để sửa.
 
 ---
 
-## 5. Màn hình 1 — Login theo nhóm
+## 4. Màn hình 1 — Login theo nhóm
 
 - Hiển thị danh sách nhóm dạng nút bấm (grid), lấy từ config (VD: Group01…Group08).
 - Không cần mật khẩu — chỉ cần chọn đúng tên nhóm là "login".
 - **Khóa nhóm ngay sau lần chọn đầu tiên (single-entry lock):** ngay khi có người bấm vào tên nhóm lần đầu, nhóm đó chuyển sang trạng thái `locked` (hiện xám/khóa trên danh sách, không thể bấm chọn được nữa từ bất kỳ thiết bị nào khác). Mục đích: cả nhóm dùng chung 1 thiết bị, và tránh nhóm khác bấm nhầm vào tên nhóm không phải của mình.
 - **Rớt mạng / vào lại = không cho vào lại:** nếu thiết bị đã vào bị mất kết nối hoặc reload trang, group đó vẫn ở trạng thái `locked` và **không thể truy cập lại** qua màn hình chọn nhóm (không có cơ chế rejoin bằng cách bấm lại tên nhóm). Đây là đánh đổi có chủ đích để ưu tiên chống vào nhầm nhóm hơn là chống rớt mạng.
 - Sau khi chọn nhóm → lưu `groupId` vào session/localStorage của thiết bị đó → chuyển sang màn hình Game.
-- Nếu nhóm đã **nộp bài rồi** mà bấm lại vào tên nhóm (trường hợp vẫn còn mở được, ví dụ do người điều khiển (GV) can thiệp mở khóa) → đưa thẳng tới màn hình Scoring (không cho làm lại).
-- **Cơ chế mở khóa khẩn cấp (cho người điều khiển (GV)):** vì khóa cứng có rủi ro nhóm bị mất trắng nếu rớt mạng thật, nên cần 1 nút "Mở khóa nhóm" ở màn hình `/admin` (xem mục 3) để người điều khiển chủ động unlock thủ công cho nhóm bị sự cố, cho phép họ chọn lại tên nhóm và tiếp tục từ state đã lưu (không mất dữ liệu `selectedCells` đã có).
+- Nếu nhóm đã **nộp bài rồi** mà bấm lại vào tên nhóm (trường hợp vẫn còn mở được, ví dụ do nhóm thuyết trình can thiệp mở khóa) → đưa thẳng tới màn hình Scoring/Leaderboard (không cho làm lại).
+- **Cơ chế mở khóa khẩn cấp:** vì khóa cứng có rủi ro nhóm bị mất trắng nếu rớt mạng thật, nên cần 1 nút "Mở khóa nhóm" ở trang điều phối (`/host`, xem mục 3) để chủ động unlock thủ công cho nhóm bị sự cố, cho phép họ chọn lại tên nhóm và tiếp tục từ state đã lưu (không mất dữ liệu `selectedCells` đã có).
 
 **Data cần:** danh sách nhóm (tên + id), trạng thái mỗi nhóm (`not_started` / `locked_in_progress` / `submitted`).
 
 ---
 
-## 6. Màn hình 2 — Game (bảng dữ liệu)
+## 5. Màn hình 2 — Game (bảng dữ liệu)
 
-### 4.1 Hiển thị
+### 5.1 Hiển thị & tương tác
 
-- Đồng hồ đếm ngược góc trên, bắt đầu từ **10:00** khi nhóm vào màn hình này (đếm giờ theo từng nhóm, không phải đồng loạt toàn lớp — trừ khi bạn muốn khống chế cứng, xem mục 8).
-- Bảng `orders.csv` render dạng table, mỗi ô có thể click để toggle trạng thái chọn.
-- Khi click 1 ô → cho hiện menu nhỏ chọn nhãn: 🔴 PII hoặc 🟡 Invariant (bắt buộc chọn loại khi đánh dấu, vì đây là 1 phần của bài học phân loại — dù điểm tính chung 1 công thức, nhãn vẫn cần lưu lại để phân tích sau).
-- Ô đã chọn đổi màu nền theo nhãn (đỏ nhạt / vàng nhạt) để dễ nhận biết.
-- Click lại lần nữa vào ô đã chọn → bỏ chọn.
-- Nút **"Nộp bài"** luôn hiển thị, có thể nộp sớm trước khi hết giờ.
+- Đồng hồ đếm ngược góc trên, bắt đầu từ **10:00** khi nhóm vào màn hình này (đếm giờ theo từng nhóm, không phải đồng loạt toàn lớp — trừ khi nhóm thuyết trình chủ động bấm "Kết thúc giờ" ở trang điều phối để khống chế cứng, xem mục 3.1).
+- Bảng `orders.csv` render dạng table, mỗi ô trong 4 cột clickable (`notes`, `shipping_instruction`, `tax`, `totalPrice`) có thể click.
+- **Phản hồi tức thời khi click (không qua bước chọn nhãn):**
+  - Click vào ô **có trong Answer Key** → ô chuyển màu **xanh lá**, cộng ngay **+2 điểm** vào tổng điểm hiển thị trên màn hình.
+  - Click vào ô **không có trong Answer Key** → ô chuyển màu **đỏ**, trừ ngay **−1 điểm**.
+  - Điểm số hiển thị real-time ở góc màn hình, cập nhật theo từng click.
+- Click lại lần nữa vào ô đã chọn → bỏ chọn (ô trở về màu gốc), hoàn tác điểm tương ứng (+2 hoặc −1) khỏi tổng điểm. Cho phép sinh viên sửa sai trước khi nộp bài.
+- Nút **"Nộp bài"** luôn hiển thị, nhóm có thể nộp sớm bất cứ lúc nào trước khi hết giờ.
 - Hết giờ (00:00) → tự động submit bài hiện tại của nhóm đó, khóa bảng lại (không cho click nữa).
+- Thời điểm nộp bài (`submitTime`, tính bằng thời gian còn lại hoặc thời gian đã dùng) được lưu lại để dùng cho xếp hạng (mục 9).
 
-### 4.2 Dữ liệu bảng (orders.csv)
+### 5.2 Dữ liệu bảng (orders.csv)
 
 Bộ dữ liệu chính thức: **7 dòng**, đúng 11 cột: `id, full_name, email, phone, address, notes, shipping_instruction, items, tax, shipping, totalPrice`.
 
@@ -109,17 +120,17 @@ Chỉ các ô sau được phép click chọn (các cột khác không tương t
 
 ---
 
-## 7. Đáp án (Answer Key) — cấu hình cứng trong agent
+## 6. Đáp án (Answer Key) — cấu hình cứng trong agent
 
 
-| Row | Cột                  | Loại         | Ghi chú                                                  |
-| --- | -------------------- | ------------ | -------------------------------------------------------- |
-| 1   | notes                | 🔴 PII       | Tên "Tuan" + SĐT đầy đủ `0987654321` lộ trong text tự do |
-| 3   | shipping_instruction | 🔴 PII       | Địa chỉ đầy đủ "45 Le Loi, District 1"                   |
-| 4   | totalPrice           | 🟡 Invariant | 80 + 8 + 5 = 93 ≠ 100 (tính sai)                         |
-| 6   | notes                | 🔴 PII       | Email cá nhân `minh.tran@gmail.com`                      |
-| 6   | tax                  | 🟡 Invariant | tax âm (`-6`) — không hợp lệ về nghiệp vụ                |
-| 7   | shipping_instruction | 🔴 PII       | SĐT đầy đủ `0912345678`                                  |
+| Row | Cột                  | Loại (chỉ để log, không ảnh hưởng điểm) | Ghi chú                                                  |
+| --- | -------------------- | --------------------------------------- | -------------------------------------------------------- |
+| 1   | notes                | 🔴 PII                                  | Tên "Tuan" + SĐT đầy đủ `0987654321` lộ trong text tự do |
+| 3   | shipping_instruction | 🔴 PII                                  | Địa chỉ đầy đủ "45 Le Loi, District 1"                   |
+| 4   | totalPrice           | 🟡 Invariant                            | 80 + 8 + 5 = 93 ≠ 100 (tính sai)                         |
+| 6   | notes                | 🔴 PII                                  | Email cá nhân `minh.tran@gmail.com`                      |
+| 6   | tax                  | 🟡 Invariant                            | tax âm (`-6`) — không hợp lệ về nghiệp vụ                |
+| 7   | shipping_instruction | 🔴 PII                                  | SĐT đầy đủ `0912345678`                                  |
 
 
 ```json
@@ -135,31 +146,42 @@ Chỉ các ô sau được phép click chọn (các cột khác không tương t
 
 **Tổng: 6 ô có lỗi / 28 ô khả dụng** (7 hàng × 4 cột clickable) ≈ 21% — đủ để tránh đoán bừa, vẫn giữ 2 hàng "sạch hoàn toàn" (row 2, row 5) làm distractor.
 
-**Lưu ý về nhãn khi chấm điểm:** vì công thức điểm dùng chung (+2/−1/0) không phân biệt loại, nhãn PII/Invariant **không ảnh hưởng đến điểm**, chỉ dùng để lưu log/thống kê (ví dụ: nhóm nào giỏi phát hiện PII hơn Invariant). Nếu nhóm chọn đúng ô nhưng gắn sai nhãn (VD: đúng là PII nhưng nhóm gắn Invariant) → **vẫn tính +2** (vì chỉ có 1 loại tính điểm dựa trên vị trí ô, không phạt nhãn sai). Cần ghi rõ điều này trong luật để agent không tự ý phạt thêm.
+**Lưu ý:** trường `type` (PII/Invariant) trong Answer Key chỉ dùng để lưu log/thống kê nội bộ (ví dụ: nhóm nào giỏi phát hiện PII hơn Invariant), **không hiển thị cho sinh viên và không ảnh hưởng đến điểm** — vì giờ sinh viên chỉ click chọn ô, không cần gắn nhãn loại lỗi.
 
 ---
 
-## 8. Công thức chấm điểm
+## 7. Công thức chấm điểm
 
-Với mỗi nhóm, so khớp danh sách ô đã chọn với Answer Key (chỉ theo `row + column`, bỏ qua `type`):
-
-
-| Trường hợp                                    | Điểm |
-| --------------------------------------------- | ---- |
-| Ô nhóm chọn **có trong** Answer Key           | +2   |
-| Ô nhóm chọn **không có trong** Answer Key     | −1   |
-| Ô **trong** Answer Key mà nhóm **không chọn** | 0    |
+Với mỗi lần click vào 1 ô trong 4 cột clickable, so khớp ngay với Answer Key (theo `row + column`):
 
 
-**Tổng điểm = Σ điểm từng ô.** Không có điểm sàn/trần âm giới hạn (điểm có thể âm nếu chọn bừa quá nhiều).
+| Trường hợp                                                          | Điểm | Màu hiển thị             |
+| ------------------------------------------------------------------- | ---- | ------------------------ |
+| Ô click **có trong** Answer Key                                     | +2   | 🟢 Xanh lá               |
+| Ô click **không có trong** Answer Key                               | −1   | 🔴 Đỏ                    |
+| Ô **trong** Answer Key mà nhóm **không chọn** (khi hết giờ/nộp bài) | 0    | (giữ màu gốc, không đổi) |
+
+
+**Tổng điểm = Σ điểm từng ô đã chọn**, cộng dồn real-time ngay khi click, không cần chờ đến lúc nộp bài mới tính. Không có điểm sàn/trần âm giới hạn (điểm có thể âm nếu chọn bừa quá nhiều).
 
 ---
 
-## 9. Màn hình 3 — Scoring
+## 8. Nộp bài (Submit)
 
-- Sau khi nhóm nộp bài → hiện ngay: tổng điểm của nhóm, số ô đúng / sai / bỏ sót.
-- Hiện bảng review chi tiết: liệt kê từng ô đã chọn — đúng (✅ +2) hay sai (❌ −1), và liệt kê các ô bị bỏ sót (⚪ 0) để nhóm học được ngay sau khi chơi.
-- Bảng xếp hạng (leaderboard) toàn lớp: tên nhóm + tổng điểm, sắp giảm dần, cập nhật real-time khi có nhóm mới nộp.
+- Nhóm có thể bấm **"Nộp bài"** bất cứ lúc nào trong thời gian 10 phút — không cần đợi hết giờ.
+- Khi nộp (dù chủ động hay do hết giờ tự động) → khóa bảng, chuyển sang màn hình Scoring/Leaderboard.
+- Ghi lại `submitTime` (mốc thời gian nộp, hoặc thời gian còn lại tại lúc nộp) để dùng làm tiêu chí phụ khi xếp hạng.
+
+---
+
+## 9. Màn hình 3 — Scoring & Leaderboard
+
+- Sau khi nhóm nộp bài → hiện ngay: tổng điểm cuối cùng của nhóm, số ô đúng / sai (dựa trên các ô đã click, đã có màu xanh/đỏ sẵn từ lúc chơi).
+- Hiện thêm các ô bị **bỏ sót** (⚪, có trong Answer Key nhưng nhóm không chọn) để nhóm học được ngay sau khi chơi.
+- **Bảng xếp hạng (leaderboard) toàn lớp**, sắp xếp theo:
+  1. Tổng điểm giảm dần (ưu tiên chính).
+  2. Nếu bằng điểm → nhóm nộp bài **sớm hơn** xếp trên (thời gian là tiêu chí phụ).
+- Bảng xếp hạng cập nhật real-time khi có nhóm mới nộp, và hiển thị cho **cả nhóm đang xem màn hình của mình lẫn trang điều phối** (mục 3.3).
 - Nút **"Tiếp tục"** → chuyển sang One-Minute Paper.
 
 ---
@@ -178,15 +200,16 @@ Form đơn giản, 3 trường, bắt buộc điền cả 3 trước khi submit:
 
 - Submit → lưu vào data store gắn với `groupId`.
 - Sau submit → màn hình cảm ơn ("Cảm ơn nhóm đã tham gia!") + có thể hiện lại điểm số/leaderboard lần cuối.
-- Giảng viên cần 1 view riêng (có thể chỉ cần export CSV/JSON) để xem toàn bộ phản hồi 1-minute paper của các nhóm sau buổi học.
+- Nhóm thuyết trình cần 1 view riêng (có thể chỉ cần export CSV/JSON) để xem toàn bộ phản hồi 1-minute paper của các nhóm sau buổi học.
 
 ---
 
 ## 11. Yêu cầu kỹ thuật cho agent
 
-- **State cần lưu theo từng nhóm:** `groupId`, `status` (not_started/in_progress/submitted), `selectedCells` (list of {row, column, type}), `score`, `startTime`, `submitTime`, `feedbackForm` ({learned, unclear, rating}).
+- **State cần lưu theo từng nhóm:** `groupId`, `status` (not_started/locked_in_progress/submitted), `selectedCells` (list of {row, column, result: "correct"|"wrong"}), `score`, `startTime`, `submitTime`, `feedbackForm` ({learned, unclear, rating}).
+- **Tính điểm tức thời phía client, xác nhận lại phía lưu trữ khi nộp:** mỗi click tính điểm ngay để hiển thị UX mượt, nhưng khi submit cần tính lại `score` dựa trên `selectedCells` đã lưu để đảm bảo không bị sai lệch do lỗi mạng/đồng bộ.
 - **Đồng bộ nhiều thiết bị:** nếu 3–4 sinh viên/nhóm dùng chung 1 thiết bị thì không cần realtime sync phức tạp; nếu cho phép nhiều thiết bị/nhóm thì cần lưu state chung theo `groupId` (không theo từng thiết bị).
-- **Trang Admin:** xem chi tiết đầy đủ ở mục 3 (bắt đầu/kết thúc trò chơi, mở khóa nhóm). Về mặt kỹ thuật, chỉ cần 1 route riêng (`/admin`), không cần auth riêng, đọc/ghi cùng data store shared với các nhóm.
-- **Lưu trữ dữ liệu:** không cần backend phức tạp — dùng key-value storage (per-nhóm là non-shared cho phần làm bài, phần leaderboard là shared để mọi nhóm thấy điểm nhau).
+- **Trang điều phối:** xem chi tiết đầy đủ ở mục 3 (bắt đầu/kết thúc trò chơi, mở khóa nhóm, xem leaderboard). Về mặt kỹ thuật, chỉ cần 1 route riêng (ví dụ `/host`), không cần auth riêng, đọc/ghi cùng data store shared với các nhóm.
+- **Lưu trữ dữ liệu:** không cần backend phức tạp — dùng key-value storage (per-nhóm là non-shared cho phần làm bài, phần leaderboard là shared để mọi nhóm và trang điều phối cùng thấy điểm nhau).
 - **Không cần xác thực thật (real auth)** — chỉ là chọn tên nhóm, phù hợp bối cảnh in-class.
 
