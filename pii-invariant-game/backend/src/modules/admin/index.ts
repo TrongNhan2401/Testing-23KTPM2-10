@@ -1,0 +1,1 @@
+export { buildAdminQuestionsRouter } from "./questions";
