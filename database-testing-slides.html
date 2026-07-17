@@ -1,547 +1,937 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-<meta charset="UTF-8">
-<title>Database Testing — Seminar Slides</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg: #0E1B1A;
-    --bg-alt: #122522;
-    --surface: #16302C;
-    --surface-2: #1B3A34;
-    --line: rgba(226,240,232,0.12);
-    --line-strong: rgba(226,240,232,0.22);
-    --ink: #EAF3EE;
-    --ink-dim: #A9C2B8;
-    --ink-mute: #6F8A80;
-    --teal: #5DCAA5;
-    --teal-dim: #1D9E75;
-    --amber: #F2A623;
-    --amber-dim: #BA7517;
-    --coral: #F0997B;
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-body: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--font-body);
-    overflow: hidden;
-    height: 100%;
-  }
-  .deck{
-    position: relative;
-    height: 100vh;
-    width: 100vw;
-  }
-  .slide{
-    position: absolute;
-    inset: 0;
-    display: none;
-    padding: 4vh 8vw;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background:
-      linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
-  }
-  .slide > *{ width: 100%; max-width: 1200px; }
-  .slide.active{ display: flex; }
-  .slide::before{
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 64px 64px;
-    opacity: 0.35;
-    pointer-events: none;
-  }
-  .eyebrow{
-    font-family: var(--font-mono);
-    font-size: 14px;
-    letter-spacing: 0.08em;
-    color: var(--teal);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 1;
-  }
-  .eyebrow::before{
-    content: '';
-    width: 22px; height: 1px;
-    background: var(--teal-dim);
-  }
-  h1{
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(30px, 3.6vw, 46px);
-    line-height: 1.2;
-    max-width: 1080px;
-    z-index: 1;
-  }
-  h1 .accent{ color: var(--teal); }
-  h1 .accent-amber{ color: var(--amber); }
-  .subhead{
-    font-size: 22px;
-    color: var(--ink-dim);
-    margin-top: 16px;
-    max-width: 760px;
-    line-height: 1.6;
-    z-index: 1;
-  }
-  .body-col{
-    z-index: 1;
-    margin-top: 16px;
-    display: grid;
-    gap: 8px;
-    max-width: 1080px;
-  }
-  .item{
-    display: flex;
-    gap: 18px;
-    align-items: flex-start;
-    padding: 10px 20px;
-    background: var(--surface);
-    border: 0.5px solid var(--line-strong);
-    border-radius: 10px;
-  }
-  .item .tag{
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--teal);
-    background: rgba(93,202,165,0.1);
-    border: 0.5px solid rgba(93,202,165,0.3);
-    padding: 3px 9px;
-    border-radius: 6px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-top: 3px;
-  }
-  .item.warn .tag{ color: var(--coral); background: rgba(240,153,123,0.1); border-color: rgba(240,153,123,0.3); }
-  .item.gold .tag{ color: var(--amber); background: rgba(242,166,35,0.1); border-color: rgba(242,166,35,0.3); }
-  .item p{ font-size: 21px; color: var(--ink); line-height: 1.42; }
-  .item p b{ color: var(--teal); font-weight: 600; }
-  .item p code{ font-family: var(--font-mono); font-size: 18px; color: var(--amber); background: rgba(0,0,0,0.2); padding: 1px 7px; border-radius: 4px;}
+  <head>
+    <meta charset="UTF-8" />
+    <title>Database Testing — Seminar Slides</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0e1b1a;
+        --bg-alt: #122522;
+        --surface: #16302c;
+        --surface-2: #1b3a34;
+        --line: rgba(226, 240, 232, 0.12);
+        --line-strong: rgba(226, 240, 232, 0.22);
+        --ink: #eaf3ee;
+        --ink-dim: #a9c2b8;
+        --ink-mute: #6f8a80;
+        --teal: #5dcaa5;
+        --teal-dim: #1d9e75;
+        --amber: #f2a623;
+        --amber-dim: #ba7517;
+        --coral: #f0997b;
+        --font-display: "Space Grotesk", sans-serif;
+        --font-body: "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        overflow: hidden;
+        height: 100%;
+      }
+      .deck {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: none;
+        padding: 4vh 8vw;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+      }
+      .slide > * {
+        width: 100%;
+        max-width: 1200px;
+      }
+      .slide.active {
+        display: flex;
+      }
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        color: var(--teal);
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1;
+      }
+      .eyebrow::before {
+        content: "";
+        width: 22px;
+        height: 1px;
+        background: var(--teal-dim);
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: clamp(30px, 3.6vw, 46px);
+        line-height: 1.2;
+        max-width: 1080px;
+        z-index: 1;
+      }
+      h1 .accent {
+        color: var(--teal);
+      }
+      h1 .accent-amber {
+        color: var(--amber);
+      }
+      .subhead {
+        font-size: 22px;
+        color: var(--ink-dim);
+        margin-top: 16px;
+        max-width: 760px;
+        line-height: 1.6;
+        z-index: 1;
+      }
+      .body-col {
+        z-index: 1;
+        margin-top: 16px;
+        display: grid;
+        gap: 8px;
+        max-width: 1080px;
+      }
+      .item {
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+        padding: 10px 20px;
+        background: var(--surface);
+        border: 0.5px solid var(--line-strong);
+        border-radius: 10px;
+      }
+      .item .tag {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--teal);
+        background: rgba(93, 202, 165, 0.1);
+        border: 0.5px solid rgba(93, 202, 165, 0.3);
+        padding: 3px 9px;
+        border-radius: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+      .item.warn .tag {
+        color: var(--coral);
+        background: rgba(240, 153, 123, 0.1);
+        border-color: rgba(240, 153, 123, 0.3);
+      }
+      .item.gold .tag {
+        color: var(--amber);
+        background: rgba(242, 166, 35, 0.1);
+        border-color: rgba(242, 166, 35, 0.3);
+      }
+      .item p {
+        font-size: 21px;
+        color: var(--ink);
+        line-height: 1.42;
+      }
+      .item p b {
+        color: var(--teal);
+        font-weight: 600;
+      }
+      .item p code {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        color: var(--amber);
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1px 7px;
+        border-radius: 4px;
+      }
 
-  .two-col{
-    z-index: 1;
-    margin-top: 18px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 1100px;
-  }
-  .card{
-    background: var(--surface);
-    border: 0.5px solid var(--line-strong);
-    border-radius: 12px;
-    padding: 18px 22px;
-  }
-  .card.faker{ border-color: rgba(93,202,165,0.4); }
-  .card.gemini{ border-color: rgba(240,153,123,0.4); }
-  .card h3{
-    font-family: var(--font-display);
-    font-size: 21px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .card.faker h3{ color: var(--teal); }
-  .card.gemini h3{ color: var(--coral); }
-  .card .desc{ font-size: 13px; color: var(--ink-mute); font-family: var(--font-mono); margin-bottom: 12px; }
-  .card ul{ list-style: none; display: grid; gap: 8px; }
-  .card ul li{ font-size: 16px; color: var(--ink-dim); padding-left: 18px; position: relative; line-height: 1.35;}
-  .card ul li::before{ content: '—'; position: absolute; left: 0; color: var(--ink-mute); }
+      .two-col {
+        z-index: 1;
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 1100px;
+      }
+      .card {
+        background: var(--surface);
+        border: 0.5px solid var(--line-strong);
+        border-radius: 12px;
+        padding: 18px 22px;
+      }
+      .card.faker {
+        border-color: rgba(93, 202, 165, 0.4);
+      }
+      .card.gemini {
+        border-color: rgba(240, 153, 123, 0.4);
+      }
+      .card h3 {
+        font-family: var(--font-display);
+        font-size: 21px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .card.faker h3 {
+        color: var(--teal);
+      }
+      .card.gemini h3 {
+        color: var(--coral);
+      }
+      .card .desc {
+        font-size: 13px;
+        color: var(--ink-mute);
+        font-family: var(--font-mono);
+        margin-bottom: 12px;
+      }
+      .card ul {
+        list-style: none;
+        display: grid;
+        gap: 8px;
+      }
+      .card ul li {
+        font-size: 16px;
+        color: var(--ink-dim);
+        padding-left: 18px;
+        position: relative;
+        line-height: 1.35;
+      }
+      .card ul li::before {
+        content: "—";
+        position: absolute;
+        left: 0;
+        color: var(--ink-mute);
+      }
 
-  .speaker{
-    z-index: 1;
-    margin-top: 14px;
-    max-width: 1080px;
-    padding: 14px 20px;
-    border-left: 3px solid var(--teal-dim);
-    background: rgba(93,202,165,0.05);
-    border-radius: 0 8px 8px 0;
-  }
-  .speaker .lbl{ font-family: var(--font-mono); font-size: 14px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .speaker p{ font-size: 18px; color: var(--ink-dim); line-height: 1.5; }
+      .speaker {
+        z-index: 1;
+        margin-top: 14px;
+        max-width: 1080px;
+        padding: 14px 20px;
+        border-left: 3px solid var(--teal-dim);
+        background: rgba(93, 202, 165, 0.05);
+        border-radius: 0 8px 8px 0;
+      }
+      .speaker .lbl {
+        font-family: var(--font-mono);
+        font-size: 14px;
+        color: var(--teal);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+      .speaker p {
+        font-size: 18px;
+        color: var(--ink-dim);
+        line-height: 1.5;
+      }
 
-  /* pipeline diagram */
-  .pipeline{
-    z-index: 1;
-    margin-top: 22px;
-    display: flex;
-    align-items: center;
-    gap: 0;
-    max-width: 980px;
-  }
-  .pnode{
-    background: var(--surface);
-    border: 0.5px solid var(--line-strong);
-    border-radius: 10px;
-    padding: 14px 18px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .pnode .t{ font-family: var(--font-display); font-size: 19px; font-weight: 600; }
-  .pnode .s{ font-family: var(--font-mono); font-size: 13px; color: var(--ink-mute); margin-top: 4px; }
-  .parrow{
-    flex: 1;
-    height: 1px;
-    background: repeating-linear-gradient(90deg, var(--teal-dim) 0 6px, transparent 6px 12px);
-    position: relative;
-    min-width: 30px;
-  }
-  .parrow::after{
-    content: '';
-    position: absolute;
-    right: 0; top: 50%;
-    transform: translateY(-50%);
-    border-left: 6px solid var(--teal-dim);
-    border-top: 4px solid transparent;
-    border-bottom: 4px solid transparent;
-  }
-  .pipeline-branch{
-    z-index: 1;
-    margin-top: 18px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    max-width: 980px;
-  }
-  .pbranch-node{
-    background: var(--surface-2);
-    border: 0.5px solid var(--line-strong);
-    border-radius: 10px;
-    padding: 16px 20px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 16px;
-    color: var(--ink-dim);
-  }
-  .pbranch-node b{ display:block; font-family: var(--font-display); font-size: 19px; color: var(--ink); margin-bottom: 5px; font-weight: 600;}
+      /* pipeline diagram */
+      .pipeline {
+        z-index: 1;
+        margin-top: 22px;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        max-width: 980px;
+      }
+      .pnode {
+        background: var(--surface);
+        border: 0.5px solid var(--line-strong);
+        border-radius: 10px;
+        padding: 14px 18px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .pnode .t {
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 600;
+      }
+      .pnode .s {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink-mute);
+        margin-top: 4px;
+      }
+      .parrow {
+        flex: 1;
+        height: 1px;
+        background: repeating-linear-gradient(90deg, var(--teal-dim) 0 6px, transparent 6px 12px);
+        position: relative;
+        min-width: 30px;
+      }
+      .parrow::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        border-left: 6px solid var(--teal-dim);
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+      }
+      .pipeline-branch {
+        z-index: 1;
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 980px;
+      }
+      .pbranch-node {
+        background: var(--surface-2);
+        border: 0.5px solid var(--line-strong);
+        border-radius: 10px;
+        padding: 16px 20px;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        color: var(--ink-dim);
+      }
+      .pbranch-node b {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 19px;
+        color: var(--ink);
+        margin-bottom: 5px;
+        font-weight: 600;
+      }
 
-  .arch-diagram{
-    z-index: 1;
-    margin-top: 30px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--ink-dim);
-    background: var(--surface);
-    border: 0.5px solid var(--line-strong);
-    border-radius: 10px;
-    padding: 24px 28px;
-    max-width: 700px;
-    white-space: pre;
-    line-height: 1.7;
-  }
-  .arch-diagram .hl{ color: var(--teal); }
-  .arch-diagram .hl2{ color: var(--coral); }
+      .arch-diagram {
+        z-index: 1;
+        margin-top: 30px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink-dim);
+        background: var(--surface);
+        border: 0.5px solid var(--line-strong);
+        border-radius: 10px;
+        padding: 24px 28px;
+        max-width: 700px;
+        white-space: pre;
+        line-height: 1.7;
+      }
+      .arch-diagram .hl {
+        color: var(--teal);
+      }
+      .arch-diagram .hl2 {
+        color: var(--coral);
+      }
 
-  .kicker-num{
-    position: fixed;
-    bottom: 26px; right: 8vw;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--ink-mute);
-    z-index: 5;
-  }
+      .kicker-num {
+        position: fixed;
+        bottom: 26px;
+        right: 8vw;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink-mute);
+        z-index: 5;
+      }
 
-  /* nav */
-  .nav{
-    position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    z-index: 10;
-    align-items: center;
-    background: rgba(14,27,26,0.85);
-    backdrop-filter: blur(6px);
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 0.5px solid var(--line-strong);
-  }
-  .dot{
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--ink-mute);
-    cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-  }
-  .dot.active{ background: var(--teal); transform: scale(1.3); }
-  .navbtn{
-    background: none; border: none; color: var(--ink-dim);
-    font-family: var(--font-mono); font-size: 13px; cursor: pointer;
-    padding: 4px 8px;
-  }
-  .navbtn:hover{ color: var(--teal); }
+      /* nav */
+      .nav {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 10;
+        align-items: center;
+        background: rgba(14, 27, 26, 0.85);
+        backdrop-filter: blur(6px);
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 0.5px solid var(--line-strong);
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ink-mute);
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.2s;
+      }
+      .dot.active {
+        background: var(--teal);
+        transform: scale(1.3);
+      }
+      .navbtn {
+        background: none;
+        border: none;
+        color: var(--ink-dim);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        cursor: pointer;
+        padding: 4px 8px;
+      }
+      .navbtn:hover {
+        color: var(--teal);
+      }
 
-  @media (max-width: 720px){
-    .two-col, .pipeline-branch{ grid-template-columns: 1fr; }
-    .slide{ padding: 5vh 6vw; }
-  }
-</style>
-</head>
-<body>
-<div class="deck" id="deck">
+      @media (max-width: 720px) {
+        .two-col,
+        .pipeline-branch {
+          grid-template-columns: 1fr;
+        }
+        .slide {
+          padding: 5vh 6vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck" id="deck">
+      <!-- SLIDE 1 -->
+      <section class="slide active">
+        <span class="kicker-num">01 / 10</span>
+        <div class="eyebrow">Database Testing</div>
+        <h1>
+          Vì sao
+          <span class="accent">database testing</span>
+          quan trọng?
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">why</span>
+            <p>
+              Database là
+              <b>nguồn sự thật cuối cùng</b>
+              của hệ thống — lỗi dữ liệu ảnh hưởng trực tiếp đến toàn bộ ứng dụng.
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">truyền thống</span>
+            <p>
+              <code>migrate-mongo</code>
+              — quản lý migration an toàn, có version, có rollback.
+            </p>
+          </div>
+          <div class="item gold">
+            <span class="tag">AI-augmented</span>
+            <p>Google Gemini AI — hỗ trợ phát hiện và che dữ liệu nhạy cảm (PII).</p>
+          </div>
+          <div class="item">
+            <span class="tag">áp dụng</span>
+            <p>
+              Toàn bộ thực hành trên hệ thống
+              <b>ProShop-v2</b>
+              .
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Database là nguồn sự thật cuối cùng của hệ thống: dù giao diện hay logic ứng dụng đúng đến đâu, dữ liệu sai
+            hoặc migration lỗi vẫn kéo sập toàn bộ hệ thống. Seminar này trình bày 2 hướng bổ sung nhau — công cụ truyền
+            thống
+            <b>migrate-mongo</b>
+            và công cụ AI-augmented
+            <b>Gemini AI</b>
+            — áp dụng thực hành trên hệ thống ProShop-v2.
+          </p>
+        </div>
+      </section>
 
-  <!-- SLIDE 1 -->
-  <section class="slide active">
-    <span class="kicker-num">01 / 10</span>
-    <div class="eyebrow">Database Testing</div>
-    <h1>Vì sao <span class="accent">database testing</span> quan trọng?</h1>
-    <div class="body-col">
-      <div class="item">
-        <span class="tag">why</span>
-        <p>Database là <b>nguồn sự thật cuối cùng</b> của hệ thống — lỗi dữ liệu ảnh hưởng trực tiếp đến toàn bộ ứng dụng.</p>
-      </div>
-      <div class="item">
-        <span class="tag">truyền thống</span>
-        <p><code>migrate-mongo</code> — quản lý migration an toàn, có version, có rollback.</p>
-      </div>
-      <div class="item gold">
-        <span class="tag">AI-augmented</span>
-        <p>Google Gemini AI — hỗ trợ phát hiện và che dữ liệu nhạy cảm (PII).</p>
-      </div>
-      <div class="item">
-        <span class="tag">áp dụng</span>
-        <p>Toàn bộ thực hành trên hệ thống <b>EShop</b>.</p>
-      </div>
+      <!-- SLIDE 2 -->
+      <section class="slide">
+        <span class="kicker-num">02 / 10</span>
+        <div class="eyebrow">Agenda</div>
+        <h1>
+          Trong seminar
+          <span class="accent">hôm nay</span>
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">01</span>
+            <p>Kiểm thử schema và dữ liệu</p>
+          </div>
+          <div class="item">
+            <span class="tag">02</span>
+            <p>
+              Quản lý migration với
+              <code>migrate-mongo</code>
+            </p>
+          </div>
+          <div class="item gold">
+            <span class="tag">03</span>
+            <p>Data masking với sự hỗ trợ của Gemini AI</p>
+          </div>
+          <div class="item">
+            <span class="tag">04</span>
+            <p>
+              In-class Activity:
+              <b>pii-invariant-game</b>
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Seminar gồm 4 phần: kiểm thử schema/dữ liệu, quản lý migration bằng migrate-mongo, data masking với Gemini
+            AI, và hoạt động thực hành
+            <b>pii-invariant-game</b>
+            để cả lớp cùng tham gia.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 3 -->
+      <section class="slide">
+        <span class="kicker-num">03 / 10</span>
+        <div class="eyebrow">Công cụ #1</div>
+        <h1>
+          <span class="accent">migrate-mongo</span>
+          là gì?
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">what</span>
+            <p>Thư viện Node.js quản lý version hóa các thay đổi schema/dữ liệu trên MongoDB.</p>
+          </div>
+          <div class="item">
+            <span class="tag">how</span>
+            <p>
+              Mỗi thay đổi là một file migration với
+              <code>up()</code>
+              (áp dụng) và
+              <code>down()</code>
+              (rollback).
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">track</span>
+            <p>Lưu lịch sử migration đã chạy → dễ theo dõi, dễ khôi phục khi có lỗi.</p>
+          </div>
+          <div class="item">
+            <span class="tag">role</span>
+            <p>Đảm bảo thay đổi dữ liệu được kiểm soát, nhất quán giữa các môi trường.</p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Mỗi thay đổi schema/dữ liệu được viết thành một file migration gồm hai hàm:
+            <code>up()</code>
+            để áp dụng,
+            <code>down()</code>
+            để rollback khi có sự cố. Lịch sử các migration đã chạy được lưu lại, giúp kiểm soát chặt chẽ và nhất quán
+            giữa các môi trường dev, staging, production.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 4 -->
+      <section class="slide">
+        <span class="kicker-num">04 / 10</span>
+        <div class="eyebrow">Công cụ #2 — AI-augmented</div>
+        <h1>
+          <span class="accent-amber">Gemini AI</span>
+          là gì?
+        </h1>
+        <div class="body-col">
+          <div class="item gold">
+            <span class="tag">detect</span>
+            <p>Phát hiện cột dữ liệu nhạy cảm (PII) mà con người dễ bỏ sót.</p>
+          </div>
+          <div class="item gold">
+            <span class="tag">suggest</span>
+            <p>Đề xuất quy tắc che dữ liệu (masking) phù hợp.</p>
+          </div>
+          <div class="item gold">
+            <span class="tag">assist</span>
+            <p>Hỗ trợ sinh script / test liên quan đến database.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">nguyên tắc</span>
+            <p>
+              Mọi kết quả từ AI đều được nhóm
+              <b>kiểm chứng thủ công</b>
+              trước khi dùng.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Gemini AI được ứng dụng ở ba việc: phát hiện cột dữ liệu nhạy cảm, đề xuất quy tắc che dữ liệu (hash,
+            format-preserving, sinh dữ liệu giả lập), và hỗ trợ viết script/test. Nguyên tắc xuyên suốt: mọi kết quả AI
+            đưa ra đều được kiểm chứng thủ công trước khi áp dụng thực tế.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 5 -->
+      <section class="slide">
+        <span class="kicker-num">05 / 10</span>
+        <div class="eyebrow">Agent skill · pain point</div>
+        <h1>
+          Viết test invariant thủ công —
+          <span class="accent-amber">lặp lại và dễ sai chỗ</span>
+        </h1>
+        <div class="body-col">
+          <div class="item warn">
+            <span class="tag">no FK</span>
+            <p>MongoDB không có Foreign Key → mỗi collection (orders, products, users…) cần bộ test invariant riêng.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">bug thật</span>
+            <p>
+              Chạy standalone trên Windows: script
+              <b>im lặng bỏ qua</b>
+              , không có log lỗi nào — rất khó debug.
+            </p>
+          </div>
+          <div class="item warn">
+            <span class="tag">tốn công</span>
+            <p>Viết tay dễ quên field thật trong schema, hoặc đặt nhầm orphan-check ở collection sai.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">scale</span>
+            <p>
+              Càng thêm collection mới, càng tốn công viết lại logic kết nối DB, đọc
+              <code>.env</code>
+              , xử lý lỗi từ đầu.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            File
+            <code>test_invariants.js</code>
+            ban đầu được viết tay cho collection
+            <code>orders</code>
+            . Khi cần mở rộng sang
+            <code>products</code>
+            hay
+            <code>users</code>
+            , việc copy-paste thủ công dễ phát sinh lỗi: quên schema thật, đặt nhầm test tham chiếu sai file, hoặc gặp
+            lỗi cross-platform (Windows) mà không có log báo.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 6 -->
+      <section class="slide">
+        <span class="kicker-num">06 / 10</span>
+        <div class="eyebrow">Agent skill · giải pháp</div>
+        <h1>
+          Đóng gói quy trình thành
+          <span class="accent">skill</span>
+          cho AI Agent
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">1 skill</span>
+            <p>= 1 quy trình chuẩn hoá, mỗi lần gọi Agent tự sinh 1 file test độc lập / collection.</p>
+          </div>
+          <div class="item">
+            <span class="tag">read schema</span>
+            <p>Agent đọc schema thật từ model trước khi viết — không tự bịa field.</p>
+          </div>
+          <div class="item">
+            <span class="tag">quy tắc</span>
+            <p>Collection nào tham chiếu tới collection khác thì test orphan-check nằm ở đó.</p>
+          </div>
+          <div class="item">
+            <span class="tag">merge</span>
+            <p>
+              Gộp nhiều file lại qua 1
+              <code>runAllInvariants.js</code>
+              chạy chung 1 connection.
+            </p>
+          </div>
+          <div class="item gold">
+            <span class="tag">checklist</span>
+            <p>
+              Agent tự chạy checklist trước khi trả kết quả: không bịa field, không xoá/ghi dữ liệu, xử lý lỗi rõ ràng.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Toàn bộ quy trình — đọc schema, phân loại invariant, xử lý các lỗi cross-platform từng gặp — được đóng gói
+            thành một Skill cho AI Agent. Chỉ cần yêu cầu "viết test invariant cho collection X", Agent sẽ tự đọc đúng
+            schema, đặt test đúng chỗ, và tự kiểm tra lại theo checklist trước khi giao file.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 7 -->
+      <section class="slide">
+        <span class="kicker-num">07 / 10</span>
+        <div class="eyebrow">migrate-mongo · pain point</div>
+        <h1>
+          Tại sao cần
+          <span class="accent">database migration</span>
+          cho MongoDB?
+        </h1>
+        <div class="two-col">
+          <div class="card">
+            <h3>Thế giới SQL</h3>
+            <div class="desc">structured</div>
+            <ul>
+              <li>
+                Có lệnh
+                <code style="color: var(--amber)">ALTER TABLE</code>
+              </li>
+              <li>Cấu trúc thay đổi đồng loạt, chặt chẽ</li>
+            </ul>
+          </div>
+          <div class="card gemini">
+            <h3>Thế giới NoSQL</h3>
+            <div class="desc">schema-less</div>
+            <ul>
+              <li>
+                Document cũ dùng
+                <code style="color: var(--amber)">name</code>
+              </li>
+              <li>
+                Document mới dùng
+                <code style="color: var(--amber)">fullName</code>
+              </li>
+              <li>Dữ liệu phân mảnh</li>
+            </ul>
+          </div>
+        </div>
+        <div class="body-col" style="margin-top: 20px">
+          <div class="item warn">
+            <span class="tag">nguy cơ</span>
+            <p>
+              Khi deploy lên Production, code mới đọc dữ liệu cũ sẽ gây lỗi
+              <code>undefined</code>
+              và sập ứng dụng.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Trong SQL, đổi tên một cột chỉ cần lệnh
+            <code>ALTER TABLE</code>
+            . MongoDB không có cấu trúc cố định: nếu đổi
+            <code>name</code>
+            thành
+            <code>fullName</code>
+            , dữ liệu cũ không tự cập nhật theo. Khi code mới được deploy lên Production, hệ thống có thể sập vì không
+            đọc được dữ liệu cũ.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 8 -->
+      <section class="slide">
+        <span class="kicker-num">08 / 10</span>
+        <div class="eyebrow">migrate-mongo · giải pháp</div>
+        <h1>
+          Giải pháp:
+          <span class="accent">migrate-mongo</span>
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">tool</span>
+            <p>Công cụ quản lý phiên bản (database migration) dành riêng cho MongoDB trong môi trường Node.js.</p>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card faker">
+            <h3>↑ UP — nâng cấp</h3>
+            <div class="desc">apply</div>
+            <ul>
+              <li>Thực thi kịch bản chuyển đổi dữ liệu</li>
+              <li>
+                Ví dụ: đổi toàn bộ
+                <code style="color: var(--teal)">name → fullName</code>
+              </li>
+            </ul>
+          </div>
+          <div class="card gemini">
+            <h3>↓ DOWN — rollback</h3>
+            <div class="desc">revert</div>
+            <ul>
+              <li>Đảo ngược quá trình an toàn nếu bị lỗi</li>
+              <li>
+                Ví dụ: trả lại
+                <code style="color: var(--coral)">fullName → name</code>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="body-col" style="margin-top: 20px">
+          <div class="item">
+            <span class="tag">changelog</span>
+            <p>
+              Tự động lưu vết các file đã chạy vào một collection
+              <code>changelog</code>
+              riêng trong DB.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            migrate-mongo hoạt động dựa trên 2 hàm chính:
+            <code>up()</code>
+            để nâng cấp cấu trúc,
+            <code>down()</code>
+            để rollback an toàn. Một collection
+            <code>changelog</code>
+            được tạo tự động để theo dõi script nào đã chạy, giúp việc deploy được kiểm soát và không lo mất dữ liệu.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 9 -->
+      <section class="slide">
+        <span class="kicker-num">09 / 10</span>
+        <div class="eyebrow">Data masking · pain point</div>
+        <h1>
+          Data masking trong NoSQL —
+          <span class="accent-amber">không chỉ thay thế chuỗi</span>
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">nested</span>
+            <p>
+              MongoDB chứa nhiều JSON lồng nhau (nested documents) như
+              <code>shippingAddress</code>
+              .
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">faker ok</span>
+            <p>Faker.js hoạt động rất tốt với các trường đơn giản (name, email…).</p>
+          </div>
+          <div class="item gold">
+            <span class="tag">cần giữ</span>
+            <p>Địa chỉ lồng nhau cần giữ đúng cấu trúc JSON, đúng quốc gia, đúng định dạng mã bưu điện.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">rủi ro</span>
+            <p>Mask thủ công dễ làm sai schema, tạo dữ liệu phi logic, gây lỗi khi kiểm thử tích hợp.</p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Không phải mọi dữ liệu trong MongoDB đều là chuỗi đơn giản. Nếu chỉ thay ngẫu nhiên từng field bên trong
+            <code>shippingAddress</code>
+            , dữ liệu sinh ra rất dễ trở nên không hợp lệ — ví dụ mã bưu điện sai quốc gia hoặc thiếu key bắt buộc, làm
+            hỏng cấu trúc JSON gốc.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 10 -->
+      <section class="slide">
+        <span class="kicker-num">10 / 10</span>
+        <div class="eyebrow">Data masking · giải pháp</div>
+        <h1>
+          Hybrid data masking:
+          <span class="accent">Faker</span>
+          +
+          <span class="accent-amber">Gemini AI</span>
+        </h1>
+
+        <div class="pipeline">
+          <div class="pnode"><div class="t">Production data</div></div>
+          <div class="parrow"></div>
+          <div class="pnode"><div class="t">Detect PII</div></div>
+          <div class="parrow"></div>
+          <div class="pnode">
+            <div class="t">Masked MongoDB</div>
+            <div class="s">an toàn · đúng schema</div>
+          </div>
+        </div>
+
+        <div class="pipeline-branch">
+          <div class="pbranch-node">
+            <b>Faker.js</b>
+            Trường phẳng đơn giản — name, email · hiệu năng cao, không cần AI
+          </div>
+          <div class="pbranch-node">
+            <b>Gemini AI</b>
+            Object JSON lồng nhau — giữ schema, sinh địa chỉ đúng quốc gia
+          </div>
+        </div>
+
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Chiến lược phân vai: Faker.js xử lý các trường phẳng như tên, email với tốc độ cao. Với
+            <code>shippingAddress</code>
+            , Gemini đọc địa chỉ gốc, nhận diện quốc gia, và sinh địa chỉ mới nhưng vẫn giữ đúng cấu trúc JSON và ngữ
+            cảnh địa lý — dữ liệu được che giấu mà ứng dụng vẫn hoạt động bình thường.
+          </p>
+        </div>
+      </section>
     </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Database chính là nguồn sự thật cuối cùng của cả hệ thống — dù giao diện đẹp đến đâu, logic đúng đến đâu, nhưng nếu dữ liệu sai hay migration lỗi, cả hệ thống đều bị ảnh hưởng. Nhóm em tiếp cận theo hai hướng: truyền thống với migrate-mongo, và AI-augmented với Gemini AI, áp dụng trên hệ thống EShop.</p>
-    </div>
-  </section>
 
-  <!-- SLIDE 2 -->
-  <section class="slide">
-    <span class="kicker-num">02 / 10</span>
-    <div class="eyebrow">Agenda</div>
-    <h1>Trong seminar <span class="accent">hôm nay</span></h1>
-    <div class="body-col">
-      <div class="item"><span class="tag">01</span><p>Kiểm thử schema và dữ liệu</p></div>
-      <div class="item"><span class="tag">02</span><p>Quản lý migration với <code>migrate-mongo</code></p></div>
-      <div class="item gold"><span class="tag">03</span><p>Data masking với sự hỗ trợ của Gemini AI</p></div>
-      <div class="item"><span class="tag">04</span><p>Hoạt động tương tác: <b>Spot-the-PII Game</b></p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Bốn phần chính: kiểm thử schema/dữ liệu, quản lý migration bằng migrate-mongo, data masking với Gemini AI, và cuối cùng cả lớp cùng tham gia Spot-the-PII Game.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 3 -->
-  <section class="slide">
-    <span class="kicker-num">03 / 10</span>
-    <div class="eyebrow">Công cụ #1</div>
-    <h1><span class="accent">migrate-mongo</span> là gì?</h1>
-    <div class="body-col">
-      <div class="item"><span class="tag">what</span><p>Thư viện Node.js quản lý version hóa các thay đổi schema/dữ liệu trên MongoDB.</p></div>
-      <div class="item"><span class="tag">how</span><p>Mỗi thay đổi là một file migration với <code>up()</code> (áp dụng) và <code>down()</code> (rollback).</p></div>
-      <div class="item"><span class="tag">track</span><p>Lưu lịch sử migration đã chạy → dễ theo dõi, dễ khôi phục khi có lỗi.</p></div>
-      <div class="item"><span class="tag">role</span><p>Đảm bảo thay đổi dữ liệu được kiểm soát, nhất quán giữa các môi trường.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Mỗi khi có thay đổi, nhóm viết một file migration với hai hàm chính: up để áp dụng, down để rollback nếu có sự cố. migrate-mongo lưu lại lịch sử các migration đã chạy, giúp kiểm soát chặt chẽ và nhất quán giữa dev, staging, production.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 4 -->
-  <section class="slide">
-    <span class="kicker-num">04 / 10</span>
-    <div class="eyebrow">Công cụ #2 — AI-augmented</div>
-    <h1><span class="accent-amber">Gemini AI</span> là gì?</h1>
-    <div class="body-col">
-      <div class="item gold"><span class="tag">detect</span><p>Phát hiện cột dữ liệu nhạy cảm (PII) mà con người dễ bỏ sót.</p></div>
-      <div class="item gold"><span class="tag">suggest</span><p>Đề xuất quy tắc che dữ liệu (masking) phù hợp.</p></div>
-      <div class="item gold"><span class="tag">assist</span><p>Hỗ trợ sinh script / test liên quan đến database.</p></div>
-      <div class="item warn"><span class="tag">nguyên tắc</span><p>Mọi kết quả từ AI đều được nhóm <b>kiểm chứng thủ công</b> trước khi dùng.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Gemini được ứng dụng ở ba việc: phát hiện cột nhạy cảm, đề xuất quy tắc che dữ liệu (hash, format-preserving, sinh dữ liệu giả lập), và hỗ trợ viết script/test. Nhóm luôn giữ nguyên tắc: mọi kết quả AI đưa ra đều được kiểm tra thủ công trước khi áp dụng thực tế.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 5 -->
-  <section class="slide">
-    <span class="kicker-num">05 / 10</span>
-    <div class="eyebrow">Agent skill · pain point</div>
-    <h1>Viết test invariant thủ công — <span class="accent-amber">lặp lại và dễ sai chỗ</span></h1>
-    <div class="body-col">
-      <div class="item warn"><span class="tag">no FK</span><p>MongoDB không có Foreign Key → mỗi collection (orders, products, users…) cần bộ test invariant riêng.</p></div>
-      <div class="item warn"><span class="tag">bug thật</span><p>Chạy standalone trên Windows: script <b>im lặng bỏ qua</b>, không có log lỗi nào — rất khó debug.</p></div>
-      <div class="item warn"><span class="tag">tốn công</span><p>Viết tay dễ quên field thật trong schema, hoặc đặt nhầm orphan-check ở collection sai.</p></div>
-      <div class="item warn"><span class="tag">scale</span><p>Càng thêm collection mới, càng tốn công viết lại logic kết nối DB, đọc <code>.env</code>, xử lý lỗi từ đầu.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Nhóm đã viết test_invariants.js cho collection orders. Nhưng khi cần làm tương tự cho products hay users, copy-paste thủ công rất dễ phát sinh lỗi — quên schema thật, đặt nhầm test tham chiếu sai file, hoặc gặp lỗi cross-platform mà không hề có log báo.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 6 -->
-  <section class="slide">
-    <span class="kicker-num">06 / 10</span>
-    <div class="eyebrow">Agent skill · giải pháp</div>
-    <h1>Đóng gói quy trình thành <span class="accent">skill</span> cho AI Agent</h1>
-    <div class="body-col">
-      <div class="item"><span class="tag">1 skill</span><p>= 1 quy trình chuẩn hoá, mỗi lần gọi Agent tự sinh 1 file test độc lập / collection.</p></div>
-      <div class="item"><span class="tag">read schema</span><p>Agent đọc schema thật từ model trước khi viết — không tự bịa field.</p></div>
-      <div class="item"><span class="tag">quy tắc</span><p>Collection nào tham chiếu tới collection khác thì test orphan-check nằm ở đó.</p></div>
-      <div class="item"><span class="tag">merge</span><p>Gộp nhiều file lại qua 1 <code>runAllInvariants.js</code> chạy chung 1 connection.</p></div>
-      <div class="item gold"><span class="tag">checklist</span><p>Agent tự chạy checklist trước khi trả kết quả: không bịa field, không xoá/ghi dữ liệu, xử lý lỗi rõ ràng.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Nhóm đóng gói toàn bộ quy trình — từ đọc schema, phân loại loại invariant, đến các lỗi cross-platform từng gặp — thành một Skill cho AI Agent. Chỉ cần yêu cầu "viết test invariant cho collection X", Agent tự đọc đúng schema, đặt đúng chỗ, và tự kiểm tra lại trước khi giao file.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 7 -->
-  <section class="slide">
-    <span class="kicker-num">07 / 10</span>
-    <div class="eyebrow">migrate-mongo · pain point</div>
-    <h1>Tại sao cần <span class="accent">database migration</span> cho MongoDB?</h1>
-    <div class="two-col">
-      <div class="card">
-        <h3>Thế giới SQL</h3>
-        <div class="desc">structured</div>
-        <ul><li>Có lệnh <code style="color:var(--amber)">ALTER TABLE</code></li><li>Cấu trúc thay đổi đồng loạt, chặt chẽ</li></ul>
-      </div>
-      <div class="card gemini">
-        <h3>Thế giới NoSQL</h3>
-        <div class="desc">schema-less</div>
-        <ul><li>Document cũ dùng <code style="color:var(--amber)">name</code></li><li>Document mới dùng <code style="color:var(--amber)">fullName</code></li><li>Dữ liệu phân mảnh</li></ul>
-      </div>
-    </div>
-    <div class="body-col" style="margin-top:20px;">
-      <div class="item warn"><span class="tag">nguy cơ</span><p>Khi deploy lên Production, code mới đọc dữ liệu cũ sẽ gây lỗi <code>undefined</code> và sập ứng dụng.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Trong SQL, đổi tên cột chỉ cần ALTER TABLE. Nhưng MongoDB không có cấu trúc cố định — nếu đổi 'name' thành 'fullName', dữ liệu cũ không tự cập nhật theo. Khi đẩy code mới lên Production, hệ thống sẽ sập vì không đọc được dữ liệu cũ.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 8 -->
-  <section class="slide">
-    <span class="kicker-num">08 / 10</span>
-    <div class="eyebrow">migrate-mongo · giải pháp</div>
-    <h1>Giải pháp: <span class="accent">migrate-mongo</span></h1>
-    <div class="body-col">
-      <div class="item"><span class="tag">tool</span><p>Công cụ quản lý phiên bản (database migration) dành riêng cho MongoDB trong môi trường Node.js.</p></div>
-    </div>
-    <div class="two-col">
-      <div class="card faker">
-        <h3>↑ UP — nâng cấp</h3>
-        <div class="desc">apply</div>
-        <ul><li>Thực thi kịch bản chuyển đổi dữ liệu</li><li>Ví dụ: đổi toàn bộ <code style="color:var(--teal)">name → fullName</code></li></ul>
-      </div>
-      <div class="card gemini">
-        <h3>↓ DOWN — rollback</h3>
-        <div class="desc">revert</div>
-        <ul><li>Đảo ngược quá trình an toàn nếu bị lỗi</li><li>Ví dụ: trả lại <code style="color:var(--coral)">fullName → name</code></li></ul>
-      </div>
-    </div>
-    <div class="body-col" style="margin-top:20px;">
-      <div class="item"><span class="tag">changelog</span><p>Tự động lưu vết các file đã chạy vào một collection <code>changelog</code> riêng trong DB.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>migrate-mongo hoạt động dựa trên 2 hàm chính: up để nâng cấp cấu trúc, down để rollback an toàn. Nó tạo ra bảng changelog để theo dõi script nào đã chạy, giúp team tự tin deploy mà không sợ mất dữ liệu.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 9 -->
-  <section class="slide">
-    <span class="kicker-num">09 / 10</span>
-    <div class="eyebrow">Data masking · pain point</div>
-    <h1>Data masking trong NoSQL — <span class="accent-amber">không chỉ thay thế chuỗi</span></h1>
-    <div class="body-col">
-      <div class="item"><span class="tag">nested</span><p>MongoDB chứa nhiều JSON lồng nhau (nested documents) như <code>shippingAddress</code>.</p></div>
-      <div class="item"><span class="tag">faker ok</span><p>Faker.js hoạt động rất tốt với các trường đơn giản (name, email…).</p></div>
-      <div class="item gold"><span class="tag">cần giữ</span><p>Địa chỉ lồng nhau cần giữ đúng cấu trúc JSON, đúng quốc gia, đúng định dạng mã bưu điện.</p></div>
-      <div class="item warn"><span class="tag">rủi ro</span><p>Mask thủ công dễ làm sai schema, tạo dữ liệu phi logic, gây lỗi khi kiểm thử tích hợp.</p></div>
-    </div>
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Trong MongoDB không phải mọi dữ liệu đều là chuỗi đơn giản. Nếu chỉ thay ngẫu nhiên từng field trong shippingAddress, rất dễ tạo dữ liệu không hợp lệ — ví dụ mã bưu điện sai quốc gia hoặc thiếu key bắt buộc.</p>
-    </div>
-  </section>
-
-  <!-- SLIDE 10 -->
-  <section class="slide">
-    <span class="kicker-num">10 / 10</span>
-    <div class="eyebrow">Data masking · giải pháp</div>
-    <h1>Hybrid data masking: <span class="accent">Faker</span> + <span class="accent-amber">Gemini AI</span></h1>
-
-    <div class="pipeline">
-      <div class="pnode"><div class="t">Production data</div></div>
-      <div class="parrow"></div>
-      <div class="pnode"><div class="t">Detect PII</div></div>
-      <div class="parrow"></div>
-      <div class="pnode"><div class="t">Masked MongoDB</div><div class="s">an toàn · đúng schema</div></div>
+    <div class="nav">
+      <button class="navbtn" id="prevBtn" aria-label="Slide trước">←</button>
+      <div id="dots" style="display: flex; gap: 8px"></div>
+      <button class="navbtn" id="nextBtn" aria-label="Slide sau">→</button>
     </div>
 
-    <div class="pipeline-branch">
-      <div class="pbranch-node"><b>Faker.js</b>Trường phẳng đơn giản — name, email · hiệu năng cao, không cần AI</div>
-      <div class="pbranch-node"><b>Gemini AI</b>Object JSON lồng nhau — giữ schema, sinh địa chỉ đúng quốc gia</div>
-    </div>
+    <script>
+      const slides = document.querySelectorAll(".slide");
+      const dotsWrap = document.getElementById("dots");
+      let current = 0;
 
-    <div class="speaker">
-      <div class="lbl">Speaker notes</div>
-      <p>Nhóm dùng chiến lược phân vai: Faker.js xử lý trường phẳng như tên, email với tốc độ cao. Với shippingAddress, Gemini đọc địa chỉ gốc, nhận diện quốc gia, sinh địa chỉ mới nhưng giữ nguyên cấu trúc JSON và đúng ngữ cảnh địa lý — dữ liệu được che giấu mà ứng dụng vẫn hoạt động bình thường.</p>
-    </div>
-  </section>
+      slides.forEach((_, i) => {
+        const d = document.createElement("div");
+        d.className = "dot" + (i === 0 ? " active" : "");
+        d.addEventListener("click", () => goTo(i));
+        dotsWrap.appendChild(d);
+      });
+      const dots = dotsWrap.querySelectorAll(".dot");
 
-</div>
+      function goTo(i) {
+        if (i < 0 || i >= slides.length) return;
+        slides[current].classList.remove("active");
+        dots[current].classList.remove("active");
+        current = i;
+        slides[current].classList.add("active");
+        dots[current].classList.add("active");
+      }
 
-<div class="nav">
-  <button class="navbtn" id="prevBtn" aria-label="Slide trước">←</button>
-  <div id="dots" style="display:flex; gap:8px;"></div>
-  <button class="navbtn" id="nextBtn" aria-label="Slide sau">→</button>
-</div>
+      document.getElementById("prevBtn").addEventListener("click", () => goTo(current - 1));
+      document.getElementById("nextBtn").addEventListener("click", () => goTo(current + 1));
 
-<script>
-  const slides = document.querySelectorAll('.slide');
-  const dotsWrap = document.getElementById('dots');
-  let current = 0;
-
-  slides.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.addEventListener('click', () => goTo(i));
-    dotsWrap.appendChild(d);
-  });
-  const dots = dotsWrap.querySelectorAll('.dot');
-
-  function goTo(i){
-    if(i < 0 || i >= slides.length) return;
-    slides[current].classList.remove('active');
-    dots[current].classList.remove('active');
-    current = i;
-    slides[current].classList.add('active');
-    dots[current].classList.add('active');
-  }
-
-  document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
-  document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
-
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'ArrowRight' || e.key === ' ') goTo(current + 1);
-    if(e.key === 'ArrowLeft') goTo(current - 1);
-  });
-</script>
-</body>
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") goTo(current + 1);
+        if (e.key === "ArrowLeft") goTo(current - 1);
+      });
+    </script>
+  </body>
 </html>
