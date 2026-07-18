@@ -55,6 +55,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        overflow-y: auto;
         background: linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
       }
       .slide > * {
@@ -411,7 +412,7 @@
     <div class="deck" id="deck">
       <!-- SLIDE 1 -->
       <section class="slide active">
-        <span class="kicker-num">01 / 10</span>
+        <span class="kicker-num">01 / 12</span>
         <div class="eyebrow">Database Testing</div>
         <h1>
           Vì sao
@@ -463,7 +464,7 @@
 
       <!-- SLIDE 2 -->
       <section class="slide">
-        <span class="kicker-num">02 / 10</span>
+        <span class="kicker-num">02 / 12</span>
         <div class="eyebrow">Agenda</div>
         <h1>
           Trong seminar
@@ -472,21 +473,25 @@
         <div class="body-col">
           <div class="item">
             <span class="tag">01</span>
-            <p>Kiểm thử schema và dữ liệu</p>
-          </div>
-          <div class="item">
-            <span class="tag">02</span>
             <p>
               Quản lý migration với
               <code>migrate-mongo</code>
             </p>
           </div>
-          <div class="item gold">
+          <div class="item">
+            <span class="tag">02</span>
+            <p>Sinh dữ liệu kiểm thử biên với AI (Gen test data)</p>
+          </div>
+          <div class="item">
             <span class="tag">03</span>
             <p>Data masking với sự hỗ trợ của Gemini AI</p>
           </div>
           <div class="item">
             <span class="tag">04</span>
+            <p>Agent Skill: tự động sinh test invariant (Gen test case)</p>
+          </div>
+          <div class="item">
+            <span class="tag">05</span>
             <p>
               In-class Activity:
               <b>pii-invariant-game</b>
@@ -496,8 +501,8 @@
         <div class="speaker">
           <div class="lbl">Ghi chú</div>
           <p>
-            Seminar gồm 4 phần: kiểm thử schema/dữ liệu, quản lý migration bằng migrate-mongo, data masking với Gemini
-            AI, và hoạt động thực hành
+            Seminar gồm 5 phần theo đúng pipeline thực tế: migration với migrate-mongo, sinh dữ liệu kiểm thử biên bằng
+            AI, data masking với Gemini AI, Agent Skill tự sinh test invariant, và hoạt động thực hành
             <b>pii-invariant-game</b>
             để cả lớp cùng tham gia.
           </p>
@@ -506,7 +511,7 @@
 
       <!-- SLIDE 3 -->
       <section class="slide">
-        <span class="kicker-num">03 / 10</span>
+        <span class="kicker-num">03 / 12</span>
         <div class="eyebrow">Công cụ #1</div>
         <h1>
           <span class="accent">migrate-mongo</span>
@@ -551,7 +556,7 @@
 
       <!-- SLIDE 4 -->
       <section class="slide">
-        <span class="kicker-num">04 / 10</span>
+        <span class="kicker-num">04 / 12</span>
         <div class="eyebrow">Công cụ #2 — AI-augmented</div>
         <h1>
           <span class="accent-amber">Gemini AI</span>
@@ -591,105 +596,7 @@
 
       <!-- SLIDE 5 -->
       <section class="slide">
-        <span class="kicker-num">05 / 10</span>
-        <div class="eyebrow">Agent skill · pain point</div>
-        <h1>
-          Viết test invariant thủ công —
-          <span class="accent-amber">lặp lại và dễ sai chỗ</span>
-        </h1>
-        <div class="body-col">
-          <div class="item warn">
-            <span class="tag">no FK</span>
-            <p>MongoDB không có Foreign Key → mỗi collection (orders, products, users…) cần bộ test invariant riêng.</p>
-          </div>
-          <div class="item warn">
-            <span class="tag">bug thật</span>
-            <p>
-              Chạy standalone trên Windows: script
-              <b>im lặng bỏ qua</b>
-              , không có log lỗi nào — rất khó debug.
-            </p>
-          </div>
-          <div class="item warn">
-            <span class="tag">tốn công</span>
-            <p>Viết tay dễ quên field thật trong schema, hoặc đặt nhầm orphan-check ở collection sai.</p>
-          </div>
-          <div class="item warn">
-            <span class="tag">scale</span>
-            <p>
-              Càng thêm collection mới, càng tốn công viết lại logic kết nối DB, đọc
-              <code>.env</code>
-              , xử lý lỗi từ đầu.
-            </p>
-          </div>
-        </div>
-        <div class="speaker">
-          <div class="lbl">Ghi chú</div>
-          <p>
-            File
-            <code>test_invariants.js</code>
-            ban đầu được viết tay cho collection
-            <code>orders</code>
-            . Khi cần mở rộng sang
-            <code>products</code>
-            hay
-            <code>users</code>
-            , việc copy-paste thủ công dễ phát sinh lỗi: quên schema thật, đặt nhầm test tham chiếu sai file, hoặc gặp
-            lỗi cross-platform (Windows) mà không có log báo.
-          </p>
-        </div>
-      </section>
-
-      <!-- SLIDE 6 -->
-      <section class="slide">
-        <span class="kicker-num">06 / 10</span>
-        <div class="eyebrow">Agent skill · giải pháp</div>
-        <h1>
-          Đóng gói quy trình thành
-          <span class="accent">skill</span>
-          cho AI Agent
-        </h1>
-        <div class="body-col">
-          <div class="item">
-            <span class="tag">1 skill</span>
-            <p>= 1 quy trình chuẩn hoá, mỗi lần gọi Agent tự sinh 1 file test độc lập / collection.</p>
-          </div>
-          <div class="item">
-            <span class="tag">read schema</span>
-            <p>Agent đọc schema thật từ model trước khi viết — không tự bịa field.</p>
-          </div>
-          <div class="item">
-            <span class="tag">quy tắc</span>
-            <p>Collection nào tham chiếu tới collection khác thì test orphan-check nằm ở đó.</p>
-          </div>
-          <div class="item">
-            <span class="tag">merge</span>
-            <p>
-              Gộp nhiều file lại qua 1
-              <code>runAllInvariants.js</code>
-              chạy chung 1 connection.
-            </p>
-          </div>
-          <div class="item gold">
-            <span class="tag">checklist</span>
-            <p>
-              Agent tự chạy checklist trước khi trả kết quả: không bịa field, không xoá/ghi dữ liệu, xử lý lỗi rõ ràng.
-            </p>
-          </div>
-        </div>
-        <div class="speaker">
-          <div class="lbl">Ghi chú</div>
-          <p>
-            Toàn bộ quy trình — đọc schema, phân loại invariant, xử lý các lỗi cross-platform từng gặp — được đóng gói
-            thành một Skill cho AI Agent. Chỉ cần yêu cầu "viết test invariant cho collection X", Agent sẽ tự đọc đúng
-            schema, đặt test đúng chỗ, và tự kiểm tra lại theo checklist trước khi giao file.
-          </p>
-        </div>
-      </section>
-
-      <!-- SLIDE 7 -->
-      <section class="slide">
-        <span class="kicker-num">07 / 10</span>
+        <span class="kicker-num">05 / 12</span>
         <div class="eyebrow">migrate-mongo · pain point</div>
         <h1>
           Tại sao cần
@@ -749,9 +656,9 @@
         </div>
       </section>
 
-      <!-- SLIDE 8 -->
+      <!-- SLIDE 6 -->
       <section class="slide">
-        <span class="kicker-num">08 / 10</span>
+        <span class="kicker-num">06 / 12</span>
         <div class="eyebrow">migrate-mongo · giải pháp</div>
         <h1>
           Giải pháp:
@@ -811,9 +718,114 @@
         </div>
       </section>
 
+      <!-- SLIDE 7 -->
+      <section class="slide">
+        <span class="kicker-num">07 / 12</span>
+        <div class="eyebrow">Gen test data · pain point</div>
+        <h1>
+          Sinh dữ liệu kiểm thử biên —
+          <span class="accent-amber">tốn công và dễ thiên vị</span>
+        </h1>
+        <div class="body-col">
+          <div class="item warn">
+            <span class="tag">thủ công</span>
+            <p>Viết tay từng đơn hàng lỗi (thiếu field, sai logic giá) rất tốn thời gian.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">thiên vị</span>
+            <p>Con người có xu hướng chỉ nghĩ ra "happy path", dễ bỏ sót các case biên thực tế.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">ID hex</span>
+            <p>
+              Cần
+              <code>ObjectId</code>
+              24 ký tự hex hợp lệ cho
+              <code>user</code>
+              /
+              <code>product</code>
+              — gõ tay rất dễ sai định dạng.
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">cần mồi</span>
+            <p>Muốn kiểm chứng bộ invariant-scanner hoạt động đúng, cần sẵn dữ liệu lỗi thật để "thử lửa".</p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Trước khi có thể test bộ invariant-scanner, nhóm cần dữ liệu lỗi thật trong collection
+            <code>orders</code>
+            để làm "mồi". Viết tay từng case rất tốn công, dễ chỉ nghĩ ra trường hợp hợp lệ (happy path) mà bỏ sót các
+            case biên, và dễ gõ sai định dạng ObjectId 24 ký tự hex.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 8 -->
+      <section class="slide">
+        <span class="kicker-num">08 / 12</span>
+        <div class="eyebrow">Gen test data · giải pháp</div>
+        <h1>
+          Giải pháp:
+          <span class="accent">generate_test_data.js</span>
+          — Gemini sinh dữ liệu biên
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">prompt schema</span>
+            <p>
+              Gemini được cung cấp đúng cấu trúc document
+              <code>Order</code>
+              chuẩn qua prompt — không tự đoán field.
+            </p>
+          </div>
+          <div class="item gold">
+            <span class="tag">3 kịch bản</span>
+            <p>
+              Sinh đúng 3 case:
+              <b>Happy path</b>
+              ·
+              <b>Negative test</b>
+              (sai logic giá, tax âm) ·
+              <b>Boundary test</b>
+              (thiếu
+              <code>shippingAddress</code>
+              ).
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">strict JSON</span>
+            <p>
+              Prompt ràng buộc nghiêm ngặt — chỉ trả về mảng JSON, không markdown, không giải thích → parse thẳng bằng
+              <code>JSON.parse()</code>
+              .
+            </p>
+          </div>
+          <div class="item">
+            <span class="tag">ObjectId</span>
+            <p>
+              Script tự convert chuỗi hex 24 ký tự thành
+              <code>ObjectId</code>
+              chuẩn trước khi
+              <code>insertMany</code>
+              vào MongoDB.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Prompt mô tả đúng schema Order thật, yêu cầu Gemini sinh 3 kịch bản cố định. Vì ràng buộc chỉ trả JSON
+            thuần, script parse và insert thẳng vào MongoDB sau khi tự chuyển ID sang ObjectId.
+          </p>
+        </div>
+      </section>
+
       <!-- SLIDE 9 -->
       <section class="slide">
-        <span class="kicker-num">09 / 10</span>
+        <span class="kicker-num">09 / 12</span>
         <div class="eyebrow">Data masking · pain point</div>
         <h1>
           Data masking trong NoSQL —
@@ -854,7 +866,7 @@
 
       <!-- SLIDE 10 -->
       <section class="slide">
-        <span class="kicker-num">10 / 10</span>
+        <span class="kicker-num">10 / 12</span>
         <div class="eyebrow">Data masking · giải pháp</div>
         <h1>
           Hybrid data masking:
@@ -892,6 +904,96 @@
             <code>shippingAddress</code>
             , Gemini đọc địa chỉ gốc, nhận diện quốc gia, và sinh địa chỉ mới nhưng vẫn giữ đúng cấu trúc JSON và ngữ
             cảnh địa lý — dữ liệu được che giấu mà ứng dụng vẫn hoạt động bình thường.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 11 -->
+      <section class="slide">
+        <span class="kicker-num">11 / 12</span>
+        <div class="eyebrow">Gen test case · pain point</div>
+        <h1>
+          Viết test invariant
+          <span class="accent-amber">thủ công</span>
+        </h1>
+        <div class="body-col">
+          <div class="item warn">
+            <span class="tag">no FK</span>
+            <p>MongoDB không có Foreign Key → mỗi collection (orders, products, users…) cần bộ test invariant riêng.</p>
+          </div>
+          <div class="item warn">
+            <span class="tag">bug thật</span>
+            <p>
+              Chạy standalone trên Windows: script
+              <b>im lặng bỏ qua</b>
+              , không có log lỗi nào — rất khó debug.
+            </p>
+          </div>
+          <div class="item warn">
+            <span class="tag">tốn công</span>
+            <p>Viết tay dễ quên field thật trong schema, hoặc đặt nhầm orphan-check ở collection sai.</p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            File
+            <code>test_invariants.js</code>
+            ban đầu được viết tay cho collection
+            <code>orders</code>
+            . Khi cần mở rộng sang
+            <code>products</code>
+            hay
+            <code>users</code>
+            , việc copy-paste thủ công dễ phát sinh lỗi: quên schema thật, đặt nhầm test tham chiếu sai file, hoặc gặp
+            lỗi cross-platform (Windows) mà không có log báo.
+          </p>
+        </div>
+      </section>
+
+      <!-- SLIDE 12 -->
+      <section class="slide">
+        <span class="kicker-num">12 / 12</span>
+        <div class="eyebrow">Gen test case · giải pháp</div>
+        <h1>
+          Đóng gói quy trình thành
+          <span class="accent">skill</span>
+          cho AI Agent
+        </h1>
+        <div class="body-col">
+          <div class="item">
+            <span class="tag">1 skill</span>
+            <p>= 1 quy trình chuẩn hoá, mỗi lần gọi Agent tự sinh 1 file test độc lập / collection.</p>
+          </div>
+          <div class="item">
+            <span class="tag">read schema</span>
+            <p>Agent đọc schema thật từ model trước khi viết — không tự bịa field.</p>
+          </div>
+          <div class="item">
+            <span class="tag">quy tắc</span>
+            <p>Collection nào tham chiếu tới collection khác thì test orphan-check nằm ở đó.</p>
+          </div>
+          <div class="item">
+            <span class="tag">merge</span>
+            <p>
+              Gộp nhiều file lại qua 1
+              <code>runAllInvariants.js</code>
+              chạy chung 1 connection.
+            </p>
+          </div>
+          <div class="item gold">
+            <span class="tag">checklist</span>
+            <p>
+              Agent tự chạy checklist trước khi trả kết quả: không bịa field, không xoá/ghi dữ liệu, xử lý lỗi rõ ràng.
+            </p>
+          </div>
+        </div>
+        <div class="speaker">
+          <div class="lbl">Ghi chú</div>
+          <p>
+            Toàn bộ quy trình — đọc schema, phân loại invariant, xử lý các lỗi cross-platform từng gặp — được đóng gói
+            thành một Skill cho AI Agent. Chỉ cần yêu cầu "viết test invariant cho collection X", Agent sẽ tự đọc đúng
+            schema, đặt test đúng chỗ, và tự kiểm tra lại theo checklist trước khi giao file.
           </p>
         </div>
       </section>
