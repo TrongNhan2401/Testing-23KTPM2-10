@@ -1,6 +1,17 @@
 ### WORKSHEET: HUMAN SCANNER VS. AI CHAOS
 
+**Thông tin Nhóm làm bài:**
+
+- **Nhóm:** ......................................................................................
+- **Thành viên 1:** ..................................................................................
+- **Thành viên 2:** ..................................................................................
+- **Thành viên 3:** ..................................................................................
+- **Thành viên 4:** ..................................................................................
+
+---
+
 **Câu hỏi 1 (Invariants Check):** Tìm ra **các vi phạm logic nghiệp vụ** đang bị ẩn giấu trong Bảng Orders.
+
 **Câu hỏi 2 (Data Masking):** Tìm tất cả các **trường (fields) hoặc đoạn text** có nguy cơ làm lộ dữ liệu cá nhân (PII), cần phải được che giấu.
 
 #### Phần 1: Bảng Khách Hàng (Users Collection)
@@ -21,7 +32,7 @@
 ]
 ```
 
-#### Phần 3: Bảng Cần Kiểm Tra (Orders Collection)
+#### Phần 3: Bảng Đơn Hàng (Orders Collection)
 
 ```json
 [
