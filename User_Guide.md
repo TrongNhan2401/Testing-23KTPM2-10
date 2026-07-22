@@ -329,6 +329,52 @@ The script scans the entire MongoDB instance across 10 critical business rules. 
 - **Referential Integrity / Virtual Foreign Keys (Tests 6, 10):** Uses the `$lookup` pipeline to flag **Orphaned Documents**—such as an order referencing a deleted product or a deleted user account.
 - **Unique Indexing (Test 7):** Scans for duplicated emails across multiple users to prevent authentication conflicts.
 
+### 4.4. AI Agent Skill for Invariant Testing
+
+Instead of running a pre-written script, you can use the Cursor AI Agent with a dedicated skill file to **dynamically generate invariant test scripts** tailored to any collection in your database. This approach adapts to your actual schema automatically.
+
+**Step 1: Import the Skill**
+
+1. Open Cursor Settings → **Cursor Settings** (or press `Ctrl + ,`)
+2. Go to **General** → **Agent Skills**
+3. Click **Import Skill** and select `test_invariants_skill.md` from your project root
+4. The skill is now registered and ready for the agent to use
+
+**Step 2: Prompt the Agent**
+
+Open a new Cursor chat and describe which collection you want to test. For example:
+
+```
+Use the nosql-invariant-testing skill to generate invariant tests
+for the [collection_name] collection.
+```
+
+Replace `[collection_name]` with your target collection (e.g., `orders`, `products`, `users`). The agent will:
+
+1. **Discover** your actual MongoDB schema and field definitions
+2. **Classify** relationships and denormalized fields
+3. **Derive** applicable invariant candidates (structural, uniqueness, referential, business-rule, temporal, PII)
+4. **Generate** a standalone test script (`.js` or `.py`) for that collection
+5. **Report** a summary table with all invariants implemented
+
+**Step 3: Run the Generated Test**
+
+```bash
+node backend/test_[collection_name]_invariants.js
+```
+
+Or, if a runner script exists:
+
+```bash
+node backend/runAllInvariants.js
+```
+
+**Expected Result:**
+
+The agent outputs a markdown report listing all invariants tested, their pass/fail status, and any `[ASSUMED]` business rules that require your confirmation.
+
+> **Note:** The `[ASSUMED]` section is important for seminar projects — it documents which business rules the AI inferred from the schema. Review and confirm these before submitting your deliverable.
+
 ## 5. Troubleshooting
 Issue 1: Environment Variables Not Loaded
   - Error: `Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
