@@ -1,88 +1,88 @@
 # Database Testing & Version Control Guide (ProShop-v2)
 
-## 1. Introduction
+## 1. Giới thiệu
 
-Welcome to the Database Testing and Schema Versioning guide for the ProShop-v2 project. Unlike traditional SQL databases, NoSQL databases (MongoDB) lack built-in schema enforcement and referential integrity (Foreign Keys).
+Chào mừng bạn đến với hướng dẫn về Database Testing và Schema Versioning cho dự án ProShop-v2. Khác với các database SQL truyền thống, các database NoSQL (MongoDB) không có sẵn schema enforcement và referential integrity (Foreign Keys) tích hợp.
 
-This guide demonstrates a robust testing architecture that addresses these NoSQL vulnerabilities using:
+Hướng dẫn này trình bày một kiến trúc testing toàn diện giải quyết các điểm yếu của NoSQL thông qua:
 
-- **Schema Versioning & Rollback:** Utilizing `migrate-mongo` to safely apply and reverse database schema changes.
-- **AI-Assisted Data Generation & Masking:** Integrating Google Gemini AI and Faker.js to generate synthetic edge-case data and mask sensitive PII (Personally Identifiable Information) without breaking JSON structures.
-- **Business Invariants Testing:** Automated Node.js scripts to detect data anomalies and orphaned documents (Dead Links).
+- **Schema Versioning & Rollback:** Sử dụng `migrate-mongo` để an toàn apply và revert các thay đổi schema database.
+- **AI-Assisted Data Generation & Masking:** Tích hợp Google Gemini AI và Faker.js để tạo synthetic edge-case data và mask các PII (Personally Identifiable Information) mà không làm hỏng cấu trúc JSON.
+- **Business Invariants Testing:** Các script Node.js tự động phát hiện data anomaly và orphaned documents (Dead Links).
 
-## 2. Install
+## 2. Cài đặt
 
-### Prerequisites
+### Yêu cầu hệ thống
 
-- **Node.js** (v18 or higher)
-- **MongoDB Atlas** account (or local MongoDB server)
-- **Google Gemini API Key** (for AI data masking/generation)
+- **Node.js** (v18 trở lên)
+- **MongoDB Atlas** account (hoặc MongoDB server local)
+- **Google Gemini API Key** (để sử dụng AI data masking/generation)
 
-### Setup Instructions
+### Hướng dẫn cài đặt
 
-#### Step 1 — Clone the repository
+#### Bước 1 — Clone repository
 
 ```bash
 git clone https://github.com/bradtraversy/proshop-v2.git
 cd proshop-v2
 ```
 
-#### Step 2 — Set up MongoDB Atlas
+#### Bước 2 — Thiết lập MongoDB Atlas
 
-- Go to [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas) and sign up / log in
-- Create a **Free Cluster** (M0 Sandbox), choose the region closest to you (e.g. Singapore)
-- Go to **Security → Network Access** → **Add IP Address** → choose **Allow Access from Anywhere** (0.0.0.0/0) for development
-- Go to **Security → Database Access** → **Add New Database User**, set a username and password, grant **Read and write to any database**, and save the password
-- Go to **Database** → click **Connect** on your cluster → **Connect your application** → copy the connection string:
+- Truy cập [https://www.mongodb.com/atlas](https://www.mongodb.com/atlas) và đăng ký / đăng nhập
+- Tạo **Free Cluster** (M0 Sandbox), chọn region gần bạn nhất (ví dụ: Singapore)
+- Vào **Security → Network Access** → **Add IP Address** → chọn **Allow Access from Anywhere** (0.0.0.0/0) cho môi trường development
+- Vào **Security → Database Access** → **Add New Database User**, đặt username và password, cấp quyền **Read and write to any database**, và lưu lại password
+- Vào **Database** → click **Connect** trên cluster của bạn → **Connect your application** → copy connection string:
 
 ```bash
-  mongodb+srv://<username>:<password>@cluster0.xxxxxx.mongodb.net/?retryWrites=true&w=majority
+mongodb+srv://<username>:<password>@cluster0.xxxxxx.mongodb.net/?retryWrites=true&w=majority
 ```
 
-#### Step 3 — Install project dependencies
+#### Bước 3 — Cài đặt các dependencies của project
 
 ```bash
 npm install
 ```
 
-> Installs all base dependencies already listed in `package.json` (including `dotenv` and `mongoose`). Deprecation warnings and audit vulnerability notices may appear — these come from third-party sub-dependencies and do not block setup; no action is required.
+> Cài đặt tất cả base dependencies đã được liệt kê sẵn trong `package.json` (bao gồm `dotenv` và `mongoose`). Các cảnh báo deprecation và audit vulnerability có thể xuất hiện — đây là từ các sub-dependencies bên thứ ba và không ảnh hưởng đến quá trình cài đặt, không cần thao tác gì thêm.
 
-#### Step 4 — Install data masking & migration dependencies
+#### Bước 4 — Cài đặt các dependencies cho data masking & migration
 
 ```bash
 npm install migrate-mongo @faker-js/faker @google/generative-ai mongodb
 ```
 
 
-| Package                 | Purpose                                                                                              | Already in package.json?          |
-| ----------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `migrate-mongo`         | Database migration tool (CLI included)                                                               | No                                |
-| `@faker-js/faker`       | Generates fake data for masking                                                                      | No                                |
-| `@google/generative-ai` | Gemini AI SDK for AI-powered masking                                                                 | No                                |
-| `mongodb`               | MongoDB driver — required directly by `migrate-mongo` (separate from `mongoose`, which the app uses) | No                                |
-| ~~`dotenv`~~            | Loads `.env` variables                                                                               | **Yes — already installed, skip** |
+| Package                 | Mục đích                                                                                        | Đã có trong package.json?   |
+| ----------------------- | ----------------------------------------------------------------------------------------------- | --------------------------- |
+| `migrate-mongo`         | Database migration tool (CLI đi kèm)                                                            | Không                       |
+| `@faker-js/faker`       | Tạo fake data để masking                                                                        | Không                       |
+| `@google/generative-ai` | Gemini AI SDK cho việc masking bằng AI                                                          | Không                       |
+| `mongodb`               | MongoDB driver — được migrate-mongo yêu cầu trực tiếp (tách biệt với `mongoose` mà app sử dụng) | Không                       |
+| ~~`dotenv`~~            | Load các biến môi trường `.env`                                                                 | **Có — đã cài sẵn, bỏ qua** |
 
 
-#### Step 5 — Initialize the migration tool
+#### Bước 5 — Khởi tạo migration tool
 
 ```bash
 npx migrate-mongo init
 ```
 
-This generates `migrate-mongo-config.js` and a `migrations/` folder in the project root. The package is considered installed once this command completes without error.
+Lệnh này tạo ra `migrate-mongo-config.js` và thư mục `migrations/` trong thư mục gốc của project. Package được coi là đã cài đặt thành công khi lệnh này chạy xong mà không có lỗi.
 
-#### Step 6 — Configure `.env`
+#### Bước 6 — Cấu hình `.env`
 
-Create or update `.env` in the root directory:
+Tạo hoặc cập nhật file `.env` trong thư mục gốc:
 
 ```env
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxx.mongodb.net/proshop?retryWrites=true&w=majority
 GEMINI_API_KEY=your_google_gemini_api_key
 ```
 
-#### Step 7 — Configure `migrate-mongo-config.js` (ESM)
+#### Bước 7 — Cấu hình `migrate-mongo-config.js` (ESM)
 
-Since ProShop uses ES Modules (`"type": "module"` in `package.json`), overwrite the generated `migrate-mongo-config.js` with:
+Vì ProShop sử dụng ES Modules (`"type": "module"` trong `package.json`), hãy ghi đè file `migrate-mongo-config.js` đã được tạo bằng nội dung sau:
 
 ```javascript
 import dotenv from "dotenv";
@@ -92,33 +92,33 @@ export default {
   mongodb: {
     url: process.env.MONGO_URI,
     databaseName: "proshop",
-    options: {}, // Keep empty for MongoDB Driver v4.0+
+    options: {}, // Để trống cho MongoDB Driver v4.0+
   },
   migrationsDir: "migrations",
   changelogCollectionName: "changelog",
   migrationFileExtension: ".js",
-  moduleSystem: "esm", // Forces ES Module execution
+  moduleSystem: "esm", // Bắt buộc dùng ES Module
 };
 ```
 
 ## 3. First Test (Migration & Rollback)
 
-This test verifies the system's ability to upgrade the database schema and safely revert it without data loss. All commands are executed directly from the project root directory.
+Test này xác minh khả năng upgrade database schema và safely revert mà không mất dữ liệu. Tất cả các lệnh được thực thi trực tiếp từ thư mục gốc của project.
 
-**Step 1 : Create a Test Migration File**
-Generate a new migration script by running the following command in the root directory:
+**Bước 1: Tạo một Test Migration File**
+Tạo script migration mới bằng lệnh sau trong thư mục gốc:
 
 ```
 npx migrate-mongo create initial_test_migration
 ```
 
-- Expected Output: A new file is created inside the migrations/ directory at the root with a timestamp prefix (e.g., 20260621075815-initial_test_migration.js).
+- Kết quả mong đợi: Một file mới được tạo trong thư mục `migrations/` tại thư mục gốc với prefix là timestamp (ví dụ: `20260621075815-initial_test_migration.js`).
 
-**Step 2: Implement the Migration Logic**
+**Bước 2: Implement Migration Logic**
 
 ```
 export const up = async (db, client) => {
-    // Test: Add a temporary test field to all products
+    // Test: Thêm một trường test tạm thời vào tất cả products
     await db.collection('products').updateMany(
         {},
         { $set: { testField: "Migration is working!" } }
@@ -126,7 +126,7 @@ export const up = async (db, client) => {
 };
 
 export const down = async (db, client) => {
-    // Revert: Completely remove the temporary test field from all products
+    // Revert: Xóa hoàn toàn trường test tạm thời khỏi tất cả products
     await db.collection('products').updateMany(
         {},
         { $unset: { testField: "" } }
@@ -134,13 +134,13 @@ export const down = async (db, client) => {
 };
 ```
 
-**Step 3: Check Initial Migration Status**
+**Bước 3: Kiểm tra Migration Status ban đầu**
 
 ```bash
 npx migrate-mongo status
 ```
 
-*Expected:*
+*Kết quả mong đợi:*
 
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
@@ -150,18 +150,18 @@ npx migrate-mongo status
 └──────────────────────────────────────────┴────────────┴─────────────────┘
 ```
 
-**Step 4: Execute Migration (Up)**
-Apply the schema changes directly to your MongoDB database instance:
+**Bước 4: Thực thi Migration (Up)**
+Apply các thay đổi schema trực tiếp vào MongoDB database instance của bạn:
 
 ```
 npx migrate-mongo up
 ```
 
-*Expected:*
+*Kết quả mong đợi:*
 
-- Terminal log : MIGRATED UP: ...-initial_test_migration.js
-- Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-Example :
+- Terminal log: `MIGRATED UP: ...-initial_test_migration.js`
+- Status Update: Nếu chạy lại `npx migrate-mongo status`, bảng sẽ ghi lại timestamp thực thi chính xác và gán migration block number:
+Ví dụ:
 
 ```
 ┌──────────────────────────────────────────┬──────────────────────────┬─────────────────┐
@@ -171,9 +171,9 @@ Example :
 └──────────────────────────────────────────┴──────────────────────────┴─────────────────┘
 ```
 
-- Database Verification: Check your products collection via MongoDB Compass or Atlas. Every product document will now dynamically contain "testField": "Migration is working!"
+- Database Verification: Kiểm tra products collection qua MongoDB Compass hoặc Atlas. Mọi product document giờ sẽ chứa "testField": "Migration is working!"
 
-Example :
+Ví dụ:
 
 ```
 {
@@ -218,18 +218,18 @@ Example :
 }
 ```
 
-**Step 5: Execute Rollback (Down)**
-Revert the database schema to its original state to ensure that your rollback logic can clean up successfully:
+**Bước 5: Thực thi Rollback (Down)**
+Revert database schema về trạng thái ban đầu để đảm bảo logic rollback có thể dọn dẹp thành công:
 
 ```
 npx migrate-mongo down
 ```
 
-*Expected:*
+*Kết quả mong đợi:*
 
-- Terminal log : MIGRATED DOWN: ...-initial_test_migration.js
-- Status Update: If you run npx migrate-mongo status again, the table will record the exact execution timestamp and assign a migration block number:
-Example :
+- Terminal log: `MIGRATED DOWN: ...-initial_test_migration.js`
+- Status Update: Nếu chạy lại `npx migrate-mongo status`, bảng sẽ ghi lại trạng thái:
+Ví dụ:
 
 ```
 ┌──────────────────────────────────────────┬────────────┬─────────────────┐
@@ -239,62 +239,62 @@ Example :
 └──────────────────────────────────────────┴────────────┴─────────────────┘
 ```
 
-- Database Cleanup: In your MongoDB instance, the testField will be fully purged ($unset), restoring your product documents exactly back to their original Mongoose schema structure.
+- Database Cleanup: Trong MongoDB instance, testField sẽ được xóa hoàn toàn ($unset), khôi phục product documents về đúng cấu trúc Mongoose schema ban đầu.
 
 ## 4. Advanced Usage
 
-Beyond structural changes, traditional QA processes struggle with generating valid test data and protecting real user data during NoSQL integration testing. We implemented an automated AI and Node.js-driven testing suite in the `backend/` directory to solve this.
+Ngoài các thay đổi về cấu trúc, các quy trình QA truyền thống gặp khó khăn trong việc tạo valid test data và bảo vệ real user data trong quá trình NoSQL integration testing. Chúng tôi đã triển khai một automated testing suite dựa trên AI và Node.js trong thư mục `backend/` để giải quyết vấn đề này.
 
 ### 4.1. AI-Assisted Synthetic Data Generation
 
-Creating edge-case data manually is time-consuming. We utilize Google Gemini AI as an automated QA engineer to read the Mongoose Schema and purposefully inject "poisoned" test cases into the database.
+Việc tạo edge-case data thủ công rất tốn thời gian. Chúng tôi sử dụng Google Gemini AI như một automated QA engineer để đọc Mongoose Schema và cố tình inject các "poisoned" test cases vào database.
 
-**Step 1: Run the Generator Script**
-Execute the following command from the root directory:
+**Bước 1: Chạy Generator Script**
+Thực thi lệnh sau từ thư mục gốc:
 
 ```bash
 node backend/generate_test_data.js
 ```
 
-**Expected Result:**
-The script successfully prompts Gemini to generate and insert exactly 3 targeted document scenarios into the `orders` collection:
+**Kết quả mong đợi:**
+Script sẽ prompt Gemini tạo và insert chính xác 3 document scenarios vào `orders` collection:
 
-1. A valid "Happy Path" order.
-2. A logic error order (e.g., negative `taxPrice` or incorrect total sum).
-3. A missing boundary data order (e.g., completely missing the `shippingAddress` object).
+1. Một order "Happy Path" hợp lệ.
+2. Một order có logic error (ví dụ: `taxPrice` âm hoặc tổng tiền không đúng).
+3. Một order thiếu boundary data (ví dụ: hoàn toàn thiếu object `shippingAddress`).
 
 ### 4.2. Intelligent Data Masking (PII Protection)
 
-When pulling production data to a testing environment, Personally Identifiable Information (PII) must be obscured without breaking the system's JSON tree structure.
+Khi pull production data vào môi trường testing, Personally Identifiable Information (PII) cần được che giấu mà không phá vỡ cấu trúc JSON tree của hệ thống.
 
-**Step 1: Run the Masking Script**
+**Bước 1: Chạy Masking Script**
 
 ```bash
 node backend/data_masking.js
 ```
 
-**Expected Result:**
-The script applies a hybrid role-based masking strategy:
+**Kết quả mong đợi:**
+Script áp dụng chiến lược masking lai:
 
-- **Faker.js** processes flat fields instantly, replacing real `name` and `email` with mock data.
-- **Gemini AI** intercepts the complex, unstructured `shippingAddress` object. It interprets the geographical context (e.g., "Vietnam") and generates a highly realistic, localized fake address while strictly adhering to the JSON schema to prevent application crashes.
+- **Faker.js** xử lý các flat fields ngay lập tức, thay thế `name` và `email` thật bằng mock data.
+- **Gemini AI** xử lý object `shippingAddress` phức tạp, không có cấu trúc. Nó diễn giải context địa lý (ví dụ: "Vietnam") và tạo địa chỉ fake thực tế, localization cao trong khi vẫn tuân thủ nghiêm ngặt JSON schema để tránh application crash.
 
 ### 4.3. Business Invariants Testing
 
-Because NoSQL databases (like MongoDB) do not natively enforce constraints, schemas, or referential integrity (Foreign Keys), invalid data can easily crash the frontend application.
+Vì các database NoSQL (như MongoDB) không có constraint, schema, hay referential integrity (Foreign Keys) tự nhiên, invalid data có thể dễ dàng làm crash frontend application.
 
-To mitigate this, we built a comprehensive validation scanner using Node.js and MongoDB Aggregation Pipelines.
+Để giảm thiểu điều này, chúng tôi đã xây dựng một comprehensive validation scanner sử dụng Node.js và MongoDB Aggregation Pipelines.
 
-**Step 1: Execute the Invariants Scanner**
+**Bước 1: Thực thi Invariants Scanner**
 
 ```bash
 node backend/test_invariants.js
 ```
 
-**Expected Result:**
-The script scans the entire MongoDB instance across 10 critical business rules. It serves as an automated security net that catches the "poisoned" data generated in Step 4.1.
+**Kết quả mong đợi:**
+Script quét toàn bộ MongoDB instance qua 10 business rules quan trọng. Nó đóng vai trò như một automated security net phát hiện các "poisoned" data đã được tạo ở Bước 4.1.
 
-*Terminal Output Example:*
+*Ví dụ Terminal Output:*
 
 ```text
 ==================================================
@@ -321,95 +321,80 @@ The script scans the entire MongoDB instance across 10 critical business rules. 
 ==================================================
 ```
 
-**Key Concepts Tested:**
+**Các khái niệm chính được test:**
 
-- **Null/Boundary Constraints (Tests 1, 3):** Identifies missing mandatory fields (e.g., Email, Shipping Address).
-- **Mathematical & Value Constraints (Tests 2, 4, 5, 9):** Validates Enum properties, positive integers, bounds (Rating $\le$ 5), and financial logic ($TotalPrice = Items + Tax + Shipping$).
-- **State Synchronization (Test 8):** Ensures logical parity between boolean states and timestamps (e.g., `isPaid` must have a corresponding `paidAt` date).
-- **Referential Integrity / Virtual Foreign Keys (Tests 6, 10):** Uses the `$lookup` pipeline to flag **Orphaned Documents**—such as an order referencing a deleted product or a deleted user account.
-- **Unique Indexing (Test 7):** Scans for duplicated emails across multiple users to prevent authentication conflicts.
+- **Null/Boundary Constraints (Tests 1, 3):** Xác định các mandatory fields bị thiếu (ví dụ: Email, Shipping Address).
+- **Mathematical & Value Constraints (Tests 2, 4, 5, 9):** Validate các Enum properties, số nguyên dương, bounds (Rating ≤ 5), và logic tài chính ($TotalPrice = Items + Tax + Shipping$).
+- **State Synchronization (Test 8):** Đảm bảo parity logic giữa boolean states và timestamps (ví dụ: `isPaid` phải có `paidAt` tương ứng).
+- **Referential Integrity / Virtual Foreign Keys (Tests 6, 10):** Sử dụng `$lookup` pipeline để đánh dấu **Orphaned Documents** — ví dụ: order tham chiếu đến product hoặc user account đã bị xóa.
+- **Unique Indexing (Test 7):** Quét các email trùng lặp giữa nhiều users để ngăn conflict về authentication.
 
 ### 4.4. AI Agent Skill for Invariant Testing
 
-Instead of running a pre-written script, you can use the Cursor AI Agent with a dedicated skill file to **dynamically generate invariant test scripts** tailored to any collection in your database. This approach adapts to your actual schema automatically.
+Thay vì chạy một script được viết sẵn, bạn có thể sử dụng Cursor AI Agent kết hợp với một skill file để **tự động sinh invariant test scripts** phù hợp với bất kỳ collection nào trong database. Cách tiếp cận này tự động thích ứng với schema thực tế của bạn.
 
-**Step 1: Import the Skill**
+**Bước 1: Import Skill**
 
-1. Open Cursor Settings → **Cursor Settings** (or press `Ctrl + ,`)
-2. Go to **General** → **Agent Skills**
-3. Click **Import Skill** and select `test_invariants_skill.md` from your project root
-4. The skill is now registered and ready for the agent to use
+**Bước 2: Prompt Agent**
 
-**Step 2: Prompt the Agent**
-
-Open a new Cursor chat and describe which collection you want to test. For example:
+Mở một Agent chat mới và mô tả collection nào bạn muốn test. Ví dụ:
 
 ```
 Use the nosql-invariant-testing skill to generate invariant tests
 for the [collection_name] collection.
 ```
 
-Replace `[collection_name]` with your target collection (e.g., `orders`, `products`, `users`). The agent will:
+Thay `[collection_name]` bằng collection mục tiêu của bạn (ví dụ: `orders`, `products`, `users`). Agent sẽ:
 
-1. **Discover** your actual MongoDB schema and field definitions
-2. **Classify** relationships and denormalized fields
-3. **Derive** applicable invariant candidates (structural, uniqueness, referential, business-rule, temporal, PII)
-4. **Generate** a standalone test script (`.js` or `.py`) for that collection
-5. **Report** a summary table with all invariants implemented
+1. **Discover** — Khám phá MongoDB schema và field definitions thực tế của bạn
+2. **Classify** — Phân loại các relationships và denormalized fields
+3. **Derive** — Xác định các invariant candidates phù hợp (structural, uniqueness, referential, business-rule, temporal, PII)
+4. **Generate** — Sinh một standalone test script (`.js` hoặc `.py`) cho collection đó
+5. **Report** — Xuất bảng tổng hợp với tất cả invariants đã implement
 
-**Step 3: Run the Generated Test**
+**Bước 3: Chạy Test đã được sinh ra**
 
 ```bash
 node backend/test_[collection_name]_invariants.js
 ```
 
-Or, if a runner script exists:
+Hoặc, nếu có script runner:
 
 ```bash
 node backend/runAllInvariants.js
 ```
 
-**Expected Result:**
+**Kết quả mong đợi:**
 
-The agent outputs a markdown report listing all invariants tested, their pass/fail status, and any `[ASSUMED]` business rules that require your confirmation.
+Agent xuất một markdown report liệt kê tất cả invariants đã test, trạng thái pass/fail, và các business rules `[ASSUMED]` cần bạn xác nhận.
 
-> **Note:** The `[ASSUMED]` section is important for seminar projects — it documents which business rules the AI inferred from the schema. Review and confirm these before submitting your deliverable.
+> **Lưu ý:** Phần `[ASSUMED]` rất quan trọng cho các project seminar — nó ghi lại các business rules mà AI suy luận từ schema. Hãy review và xác nhận trước khi nộp deliverable của bạn.
 
-## 5. Troubleshooting
-Issue 1: Environment Variables Not Loaded
-  - Error: `Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
-  [0] [nodemon] app crashed - waiting for file changes before starting...` 
+## 5. Xử lý sự cố
 
-  - When: running npm run dev
-  - Cause: The environment file is named .env.example instead of .env, so the application cannot load the environment variables.
-  - Fix: Rename the environment file from .env.example to .env.
+**Sự cố 1: Environment Variables không được load**
 
-Issue 2: Mongodb Connection Failure
-- Error: `Error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/`
-- When: running npm run dev
-- Cause: Mongodb isn't configured with IP Address 0.0.0.0/0( means allow all).
-- Fix: MongoDB Atlas is blocking your connection. Go to the Atlas Dashboard -> Security -> Network Access -> IP ACCESS List -> Add IP Address -> Add `0.0.0.0/0`(Allow Access From Anywhere).
+- Error: `Error: The` uri`parameter to`openUri()`must be a string, got "undefined". Make sure the first parameter to`mongoose.connect()`or`mongoose.createConnection() `is a string.`
+- Khi nào: Chạy `npm run dev`
+- Nguyên nhân: File môi trường được đặt tên là `.env.example` thay vì `.env`, nên application không thể load các biến môi trường.
+- Khắc phục: Đổi tên file từ `.env.example` thành `.env`.
 
-Issue 3: ES Module and CommonJS Conflict
-- Error: `ERROR: module is not defined in ES module scope
-    This file is being treated as an ES module because it has a '.js' file extension and 'D:\Testing\Seminar\proshop-v2\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension. ReferenceError: module is not defined in ES module scope
-    This file is being treated as an ES module because it has a '.js' file extension and 'D:\Testing\Seminar\proshop-v2\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
-        at file:///D:/Testing/Seminar/proshop-v2/backend/migrate-mongo-config.js:43:1
-        at ModuleJobSync.runSync (node:internal/modules/esm/module_job:458:37)
-        at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:435:47)
-        at loadESMFromCJS (node:internal/modules/cjs/loader:1537:24)
-        at Module._compile (node:internal/modules/cjs/loader:1688:5)
-        at Object..js (node:internal/modules/cjs/loader:1839:10)
-        at Module.load (node:internal/modules/cjs/loader:1441:32)
-        at Function._load (node:internal/modules/cjs/loader:1263:12)
-        at TracingChannel.traceSync (node:diagnostics_channel:322:14)
-        at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)` 
-      
-  - When: running npx migrate-mongo create initial_test_migration 
-  - Cause: package.jon is defined with type as ESM but migrate-mongodb-config.js is defined as commonjs.
-  - Fix: Ensure your `migrate-mongo-config.js` uses `export default` and `moduleSystem: 'esm'` instead of CommonJS `module.exports`.
+**Sự cố 2: Kết nối MongoDB thất bại**
 
-## 6. References
+- Error: `Error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted.`
+- Khi nào: Chạy `npm run dev`
+- Nguyên nhân: MongoDB không được cấu hình với địa chỉ IP 0.0.0.0/0 (cho phép tất cả).
+- Khắc phục: Truy cập Atlas Dashboard → Security → Network Access → IP ACCESS List → Add IP Address → Thêm `0.0.0.0/0` (Allow Access From Everywhere).
+
+**Sự cố 3: Xung đột ES Module và CommonJS**
+
+- Error: `ERROR: module is not defined in ES module scope`
+`This file is being treated as an ES module because it has a '.js' file extension and 'package.json' contains "type": "module".`
+- Khi nào: Chạy `npx migrate-mongo create initial_test_migration`
+- Nguyên nhân: `package.json` được định nghĩa với type là ESM nhưng `migrate-mongo-config.js` được định nghĩa bằng CommonJS.
+- Khắc phục: Đảm bảo `migrate-mongo-config.js` sử dụng `export default` và `moduleSystem: 'esm'` thay vì CommonJS `module.exports`.
+
+## 6. Tài liệu tham khảo
 
 - [migrate-mongo Official Documentation](https://github.com/seppevs/migrate-mongo)
 - [MongoDB Aggregation Pipeline (`$lookup`)](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/)
